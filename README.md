@@ -1,4 +1,4 @@
 solr-redis
 ==========
 
-Solr Redis Extensions
+Solr Redis Extensions 
