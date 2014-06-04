@@ -1,7 +1,5 @@
 package com.sematext.solr.redis;
 
-import java.util.HashSet;
-import java.util.Set;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
@@ -15,7 +13,18 @@ import redis.clients.jedis.JedisCommands;
 import redis.clients.jedis.JedisPool;
 
 /**
- * Create a boolean query with multiple tokens.
+ * ParserPlugin which builds a query parser basing on data stored in Redis.
+ * <p> RedisQParserPlugin initiates connection with Redis and pass the connection
+ * object to RedisQParser which is responsible for fetching data and building a
+ * query.
+ * <p>Example of usage <code>{!redis method=smembers key=some_key}field</code>
+ * <br><p>
+ * You should configure that query parser plugin in solrconfig.xml first
+ * <br><code>
+ *   &lt;queryParser name="redis" class="com.sematext.solr.redis.RedisQParserPlugin"&gt;<br>
+ *     &lt;str name="host"&gt;localhost&lt;/str&gt;<br>
+ *   &lt;/queryParser&gt;<br>
+ * </code>
  */
 public class RedisQParserPlugin extends QParserPlugin {
   public static final String NAME = "redis";
@@ -23,8 +32,6 @@ public class RedisQParserPlugin extends QParserPlugin {
   
   static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
 
-  private Set<HostAndPort> hosts = new HashSet<>();
-  
   private JedisPool jedisConnectorPool;
   private JedisCommands jedis;
 
@@ -57,7 +64,9 @@ public class RedisQParserPlugin extends QParserPlugin {
           jedisConnectorPool = new JedisPool(host);
         }
       } else {
-        log.info("Initialization of RedisQParserPlugin failed. No redis host configuration");
+        log.info("Initialization of RedisQParserPlugin failed. No redis host configuration."
+                + "Using default host: localhost");
+        jedisConnectorPool = new JedisPool(HostAndPort.LOCALHOST_STR);
       }
     }
   }

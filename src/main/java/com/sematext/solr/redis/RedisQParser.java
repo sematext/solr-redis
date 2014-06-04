@@ -16,12 +16,12 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCommands;
 
 /**
- *
+ * RedisQParser is responsible for preparing a query based on data fetched from Redis.
  */
 public class RedisQParser extends QParser {
   static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
   
-  protected Collection<String> terms;
+  protected Collection<String> terms = null;
 
   private final JedisCommands redis;
 
@@ -34,22 +34,20 @@ public class RedisQParser extends QParser {
     String redisKey = localParams.get("key");
 
     if (redisMethod.compareToIgnoreCase("smembers") == 0) {
+      log.debug("Fetching smembers from Redis for key: " + redisKey);
       terms = redis.smembers(redisKey);
     }
-
-    Collection<String> terms = null;
   }
 
   @Override
   public Query parse() throws SyntaxError {
     String fieldName = localParams.get(QueryParsing.V, null);
     BooleanQuery booleanQuery = new BooleanQuery(true);
-    log.debug();
+    log.debug("Preparing a query for " + terms.size() + " terms");
     for (String term : terms) {
       TermQuery termQuery = new TermQuery(new Term(qstr, fieldName));
       booleanQuery.add(termQuery, BooleanClause.Occur.SHOULD);
     }
     return booleanQuery;
   }
-
 }
