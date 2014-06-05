@@ -20,10 +20,9 @@ import redis.clients.jedis.JedisCommands;
  */
 public class RedisQParser extends QParser {
   static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
-  
-  protected Collection<String> terms = null;
 
   private final JedisCommands redis;
+  private Collection<String> terms = null;
 
   RedisQParser (String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req,
           JedisCommands redis) {
@@ -32,6 +31,16 @@ public class RedisQParser extends QParser {
 
     String redisMethod = localParams.get("method");
     String redisKey = localParams.get("key");
+
+    if (redisMethod == null) {
+      log.error("No method argument passed to RedisQParser.");
+      throw new IllegalArgumentException("No method argument passed to RedisQParser.");
+    }
+
+    if (redisKey == null || redisKey.isEmpty()) {
+      log.error("No key argument passed to RedisQParser");
+      throw new IllegalArgumentException("No key argument passed to RedisQParser");
+    }
 
     if (redisMethod.compareToIgnoreCase("smembers") == 0) {
       log.debug("Fetching smembers from Redis for key: " + redisKey);
@@ -45,7 +54,7 @@ public class RedisQParser extends QParser {
     BooleanQuery booleanQuery = new BooleanQuery(true);
     log.debug("Preparing a query for " + terms.size() + " terms");
     for (String term : terms) {
-      TermQuery termQuery = new TermQuery(new Term(qstr, fieldName));
+      TermQuery termQuery = new TermQuery(new Term(qstr, term));
       booleanQuery.add(termQuery, BooleanClause.Occur.SHOULD);
     }
     return booleanQuery;
