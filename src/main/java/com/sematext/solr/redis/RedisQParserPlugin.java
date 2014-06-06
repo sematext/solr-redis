@@ -17,6 +17,14 @@ import redis.clients.jedis.JedisPool;
  * <p> RedisQParserPlugin initiates connection with Redis and pass the connection
  * object to RedisQParser which is responsible for fetching data and building a
  * query.
+ * <p>
+ * Allowed parameters for the RedisQParserPlugin are:
+ * <ul>
+ * <li><b>method</b> - Method for Redis. (required)</li>
+ * <li><b>key</b> - Key used to fetch data from Redis. (required)</li>
+ * <li><b>operator</b> - Operator which connects terms taken from Redis. Allowed values are "AND" and "OR".
+ * Default operator is OR. (optional)</li>
+ * </ul>
  * <p>Example of usage <code>{!redis method=smembers key=some_key}field</code>
  * <br><p>
  * You should configure that query parser plugin in solrconfig.xml first
@@ -64,10 +72,14 @@ public class RedisQParserPlugin extends QParserPlugin {
           jedisConnectorPool = new JedisPool(host);
         }
       } else {
-        log.info("Initialization of RedisQParserPlugin failed. No redis host configuration."
+        log.error("Initialization of RedisQParserPlugin failed. No redis host configuration."
                 + "Using default host: localhost");
         jedisConnectorPool = new JedisPool(HostAndPort.LOCALHOST_STR);
       }
+    } else {
+      log.error("Initialization of RedisQParserPlugin failed. No redis configuration."
+              + "Using default host: localhost");
+      jedisConnectorPool = new JedisPool(HostAndPort.LOCALHOST_STR);
     }
   }
 }
