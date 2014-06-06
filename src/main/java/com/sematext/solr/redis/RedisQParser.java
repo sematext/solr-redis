@@ -33,14 +33,18 @@ public class RedisQParser extends QParser {
       }
   };
 
-  private final JedisCommands redis;
+  private final JedisCommands jedis;
   private Collection<String> redisObjectsCollection = null;
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
 
+  RedisQParser(String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req, JedisCommands jedis) {
+    this(qstr, localParams, params, req, jedis, 0);
+  }
+
   RedisQParser (String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req,
-          JedisCommands redis) {
+          JedisCommands jedis, int maxJedisRetries) {
     super(qstr, localParams, params, req);
-    this.redis = redis;
+    this.jedis = jedis;
 
     String redisMethod = localParams.get("method");
     String redisKey = localParams.get("key");
@@ -49,6 +53,9 @@ public class RedisQParser extends QParser {
     if (redisMethod == null) {
       log.error("No method argument passed to RedisQParser.");
       throw new IllegalArgumentException("No method argument passed to RedisQParser.");
+    } else if (!ALLOWED_METHODS.contains(redisMethod)) {
+      log.error("Wrong Redis method: {}", redisMethod);
+      throw new IllegalArgumentException("Wrong Redis method.");
     }
 
     if (redisKey == null || redisKey.isEmpty()) {
@@ -56,16 +63,13 @@ public class RedisQParser extends QParser {
       throw new IllegalArgumentException("No key argument passed to RedisQParser");
     }
 
-    if (redisMethod.compareToIgnoreCase("smembers") == 0) {
-      log.debug("Fetching smembers from Redis for key: " + redisKey);
-      redisObjectsCollection = redis.smembers(redisKey);
-    }
-
     if (operatorString != null && "AND".equalsIgnoreCase(operatorString)) {
       operator = BooleanClause.Occur.MUST;
     } else {
       operator = BooleanClause.Occur.SHOULD;
     }
+
+    fetchDataFromRedis(redisMethod, redisKey, maxJedisRetries);
   }
 
   @Override
@@ -112,5 +116,19 @@ public class RedisQParser extends QParser {
     log.debug("Prepared a query for field {} with {} boolean clauses", booleanClausesTotal);
 
     return booleanQuery;
+  }
+
+  private void fetchDataFromRedis(String redisMethod, String redisKey, int maxJedisRetries) {
+    int retries = 0;
+    while (redisObjectsCollection == null && retries++ < maxJedisRetries + 1) {
+      try {
+        if (redisMethod.compareToIgnoreCase("smembers") == 0) {
+          log.debug("Fetching smembers from Redis for key: " + redisKey);
+          redisObjectsCollection = jedis.smembers(redisKey);
+        }
+      } catch (Exception ex) {
+        log.warn("There was an error fetching data from redis.", ex);
+      }
+    }
   }
 }
