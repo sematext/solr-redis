@@ -1,5 +1,6 @@
 package com.sematext.solr.redis;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
@@ -41,7 +42,6 @@ public class RedisQParserPlugin extends QParserPlugin {
   static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
 
   private JedisPool jedisConnectorPool;
-  private JedisCommands jedis;
 
 
   @Override
@@ -56,7 +56,12 @@ public class RedisQParserPlugin extends QParserPlugin {
       }
     }
   }
-  
+
+  @VisibleForTesting
+  public void setJedisConnectorPool(JedisPool jedisConnectorPool) {
+    this.jedisConnectorPool = jedisConnectorPool;
+  }
+
   @Override
   public void init(NamedList args) {
     if (args != null) {

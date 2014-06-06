@@ -28,20 +28,52 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
       jedis = new Jedis("localhost");
       jedis.flushAll();
       jedis.sadd("test_key", "test");
-    } catch (Exception ex) {
-    }
+    } catch (Exception ex) {}
   }
 
   @Test
   public void shouldFindSingleDocument() {
     String[] doc = {"id", "1", "string_field", "test"};
     assertU(adoc(doc));
-    assertU(commit());
+    assertU(commit());{
+    }
 
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
     params.add("fq", "{!redis method=smembers key=test_key}string_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+  }
+
+  @Test
+  public void shouldFindNoDocumentOnMissingRedisKey() {
+    String[] doc = {"id", "1", "string_field", "test"};
+    assertU(adoc(doc));
+    assertU(commit());
+
+    jedis.flushAll();
+
+    ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis method=smembers key=test_key}string_field");
+    assertQ(req(params), "*[count(//doc)=0]");
+  }
+
+  @Test
+  public void shouldFindThreeDocuments() {
+    String[] doc1 = {"id", "1", "string_field", "test"};
+    String[] doc2 = {"id", "2", "string_field", "other_key"};
+    String[] doc3 = {"id", "3", "string_field", "other_key"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(commit());
+
+    jedis.sadd("test_key", "other_key");
+
+    ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis method=smembers key=test_key}string_field");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']");
   }
 
   @After

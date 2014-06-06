@@ -1,4 +1,4 @@
 language: java
-script: "mvn clean test -Dskip.integration.tests=false"
+script: "mvn test verify -Dskip.integration.tests=false"
 jdk:
   - oraclejdk7

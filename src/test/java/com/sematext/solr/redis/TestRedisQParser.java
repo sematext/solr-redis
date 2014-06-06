@@ -73,14 +73,30 @@ public class TestRedisQParser {
     when(localParamsMock.get("method")).thenReturn("smembers");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<String>(Arrays.asList("123", "321")));
+    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<>(Arrays.asList("123", "321")));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisMock);
     verify(jedisMock).smembers("simpleKey");
     Query query = redisQParser.parse();
-    Set<Term> terms = new HashSet<Term>();
+    Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
+  }
+ 
+  @Test
+  public void shouldReturnEmptyQueryOnEmptyListOfSmembers() throws SyntaxError, IOException {
+    when(localParamsMock.get("method")).thenReturn("smembers");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<String>());
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisMock);
+    verify(jedisMock).smembers("simpleKey");
+    Query query = redisQParser.parse();
+    Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(0, terms.size());
   }
 }
