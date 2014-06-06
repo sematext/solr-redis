@@ -1,11 +1,17 @@
 package com.sematext.solr.redis;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.util.BytesRef;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.QParser;
@@ -19,10 +25,17 @@ import redis.clients.jedis.JedisCommands;
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
  */
 public class RedisQParser extends QParser {
-  static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
+  private static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
+
+  private static final Set<String>  ALLOWED_METHODS = new HashSet<String>(){
+      {
+        add("smembers");
+      }
+  };
 
   private final JedisCommands redis;
-  private Collection<String> terms = null;
+  private Collection<String> redisObjectsCollection = null;
+  private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
 
   RedisQParser (String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req,
           JedisCommands redis) {
@@ -31,6 +44,7 @@ public class RedisQParser extends QParser {
 
     String redisMethod = localParams.get("method");
     String redisKey = localParams.get("key");
+    String operatorString = localParams.get("operator", "OR");
 
     if (redisMethod == null) {
       log.error("No method argument passed to RedisQParser.");
@@ -44,19 +58,59 @@ public class RedisQParser extends QParser {
 
     if (redisMethod.compareToIgnoreCase("smembers") == 0) {
       log.debug("Fetching smembers from Redis for key: " + redisKey);
-      terms = redis.smembers(redisKey);
+      redisObjectsCollection = redis.smembers(redisKey);
+    }
+
+    if (operatorString != null && "AND".equalsIgnoreCase(operatorString)) {
+      operator = BooleanClause.Occur.MUST;
+    } else {
+      operator = BooleanClause.Occur.SHOULD;
     }
   }
 
   @Override
   public Query parse() throws SyntaxError {
-    String fieldName = localParams.get(QueryParsing.V, null);
+    String fieldName = localParams.get(QueryParsing.V);
     BooleanQuery booleanQuery = new BooleanQuery(true);
-    log.debug("Preparing a query for " + terms.size() + " terms");
-    for (String term : terms) {
-      TermQuery termQuery = new TermQuery(new Term(qstr, term));
-      booleanQuery.add(termQuery, BooleanClause.Occur.SHOULD);
+    int booleanClausesTotal = 0;
+
+    log.debug("Preparing a query for " + redisObjectsCollection.size() + " redis objects for field: " + fieldName);
+
+    for (String termString : redisObjectsCollection) {
+      try {
+        TokenStream tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
+        BytesRef term = new BytesRef();
+        if (tokenStream != null) {
+          CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+          tokenStream.reset();
+
+          int counter = 0;
+          while (tokenStream.incrementToken()) {
+
+            log.trace("Taking {} token from query string from {} for field: ",
+                    ++counter, termString, fieldName);
+
+            term = new BytesRef(charAttribute);
+            TermQuery termQuery = new TermQuery(new Term(fieldName, term));
+            booleanQuery.add(termQuery, this.operator);
+            ++booleanClausesTotal;
+          }
+
+          tokenStream.end();
+          tokenStream.close();
+        } else {
+          term.copyChars(termString);
+          TermQuery termQuery = new TermQuery(new Term(fieldName, term));
+          booleanQuery.add(termQuery, this.operator);
+          ++booleanClausesTotal;
+        }
+      } catch (IOException ex) {
+        log.error("Error occured during processing token stream.", ex);
+      }
     }
+
+    log.debug("Prepared a query for field {} with {} boolean clauses", booleanClausesTotal);
+
     return booleanQuery;
   }
 }

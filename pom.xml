@@ -14,23 +14,8 @@
         <junit.version>4.11</junit.version>
         <mockito.version>1.9.5</mockito.version>
         
-        <skip.integration.tests>true</skip.integration.tests>
         <skip.unit.tests>false</skip.unit.tests>
     </properties>
-
-    <profiles>
-        <profile>
-            <id>dev</id>
-        </profile>
-        <profile>
-            <id>integration-test</id>
-            <properties>
-                <build.profile.id>integration-test</build.profile.id>
-                <skip.integration.tests>false</skip.integration.tests>
-                <skip.unit.tests>true</skip.unit.tests>
-            </properties>
-        </profile>
-    </profiles>
 
     <dependencies>
         <dependency>
@@ -129,11 +114,16 @@
                                     <pattern>redis</pattern>
                                     <shadedPattern>com.sematext.solr.redis</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons</pattern>
+                                    <shadedPattern>com.sematext.apache.commons</shadedPattern>
+                                </relocation>
                             </relocations>
                             <artifactSet>
                                 <includes>
                                     <include>redis.clients:*</include>
                                     <include>com.google.guava</include>
+                                    <include>org.apache.commons</include>
                                 </includes>
                             </artifactSet>
                         </configuration>
@@ -165,9 +155,6 @@
                             <goal>integration-test</goal>
                             <goal>verify</goal>
                         </goals>
-                        <configuration>
-                            <skipTests>${skip.integration.tests}</skipTests>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
