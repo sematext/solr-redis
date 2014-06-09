@@ -30,6 +30,8 @@ public class RedisQParser extends QParser {
   private static final Set<String>  ALLOWED_METHODS = new HashSet<String>(){
       {
         add("smembers");
+        add("zrevrangebyscore");
+        add("zrangebyscore");
       }
   };
 
@@ -69,7 +71,7 @@ public class RedisQParser extends QParser {
       operator = BooleanClause.Occur.SHOULD;
     }
 
-    fetchDataFromRedis(redisMethod, redisKey, maxJedisRetries);
+    fetchDataFromRedis(redisMethod, redisKey, maxJedisRetries, params);
   }
 
   @Override
@@ -118,13 +120,34 @@ public class RedisQParser extends QParser {
     return booleanQuery;
   }
 
-  private void fetchDataFromRedis(String redisMethod, String redisKey, int maxJedisRetries) {
+  private Collection<String> fetchSmembers(String redisKey, int maxJedisRetries) {
+    log.debug("Fetching smembers from Redis for key: " + redisKey);
+    return jedis.smembers(redisKey);
+  }
+
+  private Collection<String> fetchRevrangeByScore(String redisKey, int maxJedisRetries, SolrParams params) {
+    String min = localParams.get("min");
+    String max = localParams.get("max");
+    if (min == null || "".equals(min)) {
+      min = "-inf";
+    }
+    if (max == null || "".equals(max)) {
+      max = "+inf";
+    }
+    log.debug("Fetching zrevrangebyscore from Redis for key: {} ({}, {})", redisKey, min, max);
+    return jedis.zrevrangeByScore(redisKey, max, min);
+  }
+
+  private void fetchDataFromRedis(String redisMethod, String redisKey, int maxJedisRetries,
+          SolrParams additionalParams) {
     int retries = 0;
     while (redisObjectsCollection == null && retries++ < maxJedisRetries + 1) {
       try {
-        if (redisMethod.compareToIgnoreCase("smembers") == 0) {
-          log.debug("Fetching smembers from Redis for key: " + redisKey);
-          redisObjectsCollection = jedis.smembers(redisKey);
+        if (redisMethod.equalsIgnoreCase("smembers")) {
+          redisObjectsCollection = fetchSmembers(redisKey, maxJedisRetries);
+        } else if (redisMethod.equalsIgnoreCase("zrevrangebyscore") ||
+                redisMethod.equalsIgnoreCase("zrangebyscore")) {
+        redisObjectsCollection = fetchRevrangeByScore(redisKey, maxJedisRetries, params);
         }
       } catch (Exception ex) {
         log.warn("There was an error fetching data from redis.", ex);

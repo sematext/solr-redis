@@ -99,4 +99,57 @@ public class TestRedisQParser {
     query.extractTerms(terms);
     Assert.assertEquals(0, terms.size());
   }
+
+  @Test
+  public void shouldAddTermsFromRedisOnRangeByScoreMethodWithDefaultParams() throws SyntaxError, IOException {
+    when(localParamsMock.get("method")).thenReturn("zrangebyscore");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.zrevrangeByScore(any(String.class), any(String.class), any(String.class))).
+            thenReturn(new HashSet<String>(Arrays.asList("123", "321")));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisMock);
+    verify(jedisMock).zrevrangeByScore("simpleKey", "+inf", "-inf");
+    Query query = redisQParser.parse();
+    Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(2, terms.size());
+  }
+
+    @Test
+  public void shouldAddTermsFromRedisOnRangeByScoreMethodWithCustomRange() throws SyntaxError, IOException {
+    when(localParamsMock.get("method")).thenReturn("zrangebyscore");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("min")).thenReturn("1");
+    when(localParamsMock.get("max")).thenReturn("100");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.zrevrangeByScore(any(String.class), any(String.class), any(String.class))).
+            thenReturn(new HashSet<String>(Arrays.asList("123", "321")));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisMock);
+    verify(jedisMock).zrevrangeByScore("simpleKey", "100", "1");
+    Query query = redisQParser.parse();
+    Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(2, terms.size());
+  }
+
+  @Test
+  public void shouldAddTermsFromRedisOnRevrangeByScoreMethodWithDefaultParams() throws SyntaxError, IOException {
+    when(localParamsMock.get("method")).thenReturn("zrangebyscore");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.zrevrangeByScore(any(String.class), any(String.class), any(String.class))).
+            thenReturn(new HashSet<String>(Arrays.asList("123", "321")));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisMock);
+    verify(jedisMock).zrevrangeByScore("simpleKey", "+inf", "-inf");
+    Query query = redisQParser.parse();
+    Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(2, terms.size());
+  }
 }

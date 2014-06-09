@@ -73,7 +73,30 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
     params.add("fq", "{!redis method=smembers key=test_key}string_field");
-    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']",
+            "//result/doc[2]/str[@name='id'][.='2']", "//result/doc[3]/str[@name='id'][.='3']");
+  }
+
+  @Test
+  public void shouldFindTwoDocumentsOnZrevRangeByScore() {
+    String[] doc1 = {"id", "1", "string_field", "member1"};
+    String[] doc2 = {"id", "2", "string_field", "member2"};
+    String[] doc3 = {"id", "3", "string_field", "member3"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(commit());
+
+    jedis.flushAll();
+
+    jedis.zadd("test_key", 1, "member1");
+    jedis.zadd("test_key", 2, "member2");
+    jedis.zadd("test_key", 3, "member3");
+
+    ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis method=zrevrangebyscore key=test_key min=2 max=3}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='2']");
   }
 
   @After
@@ -85,4 +108,6 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     } catch (Exception ex) {
     }
   }
+
+
 }

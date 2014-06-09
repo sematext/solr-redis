@@ -1,6 +1,7 @@
 package com.sematext.solr.redis;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
@@ -84,7 +85,7 @@ public class RedisQParserPlugin extends QParserPlugin {
       String password = null;
 
       SolrParams queryParserConfigurationParameters = SolrParams.toSolrParams(args);
-      JedisPoolConfig poolConfig = new JedisPoolConfig();
+      GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
 
       Object maxConnectionsConfiguration = args.get(MAX_CONNECTIONS_FIELD);
       if (maxConnectionsConfiguration instanceof String) {
