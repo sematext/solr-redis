@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Protocol;
 
 /**
@@ -23,12 +22,25 @@ import redis.clients.jedis.Protocol;
  * <p>
  * Allowed parameters for the RedisQParserPlugin are:
  * <ul>
- * <li><b>method</b> - Method for Redis. (required)</li>
+ * <li><b>method</b> - Method for Redis. Currently allowed: smembers, zrangebyscore, zrevrangebyscore. (required)</li>
  * <li><b>key</b> - Key used to fetch data from Redis. (required)</li>
  * <li><b>operator</b> - Operator which connects terms taken from Redis. Allowed values are "AND" and "OR".
  * Default operator is OR. (optional)</li>
  * </ul>
- * <p>Example of usage <code>{!redis method=smembers key=some_key}field</code>
+ * <p>
+ * ZRANGEBYSCORE and ZREVRANGEBYSCORE specific parameters: <br> <ul>
+ * <li><b>min</b> - Minimum value of range. (optional)</li>
+ * <li><b>key</b> - Maximum value of range. (required)</li>
+ * </ul>
+ * <p>Examples of usage: <br>
+ * <ul>
+ * <li>
+ *  <code>{!redis method=smembers key=some_key}field</code>
+ * </li>
+ * <li>
+ *  <code>{!redis method=zrevrange key=some_key min=1 max=1000}field</code>
+ * </li>
+ * </ul>
  * <br><p>
  * You should configure that query parser plugin in solrconfig.xml first
  * <br><br><code>
