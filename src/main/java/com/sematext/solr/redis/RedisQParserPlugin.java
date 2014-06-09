@@ -38,7 +38,7 @@ import redis.clients.jedis.Protocol;
  *  <code>{!redis method=smembers key=some_key}field</code>
  * </li>
  * <li>
- *  <code>{!redis method=zrevrange key=some_key min=1 max=1000}field</code>
+ *  <code>{!redis method=zrevrangebyscore key=some_key min=1 max=1000}field</code>
  * </li>
  * </ul>
  * <br><p>
