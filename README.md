@@ -4,19 +4,21 @@ Solr Redis Extensions
 =====================
 
 
-That extenstion is ParserPlugin which builds a query parser basing on data stored in Redis.
+This extenstion is a ParserPlugin that provides a Solr query parser based on data stored in Redis.
 
-RedisQParserPlugin initiates connection with Redis and pass the connection object to RedisQParser which is responsible for fetching data and building a query.
+RedisQParserPlugin creates a connection with Redis and passes the connection object to RedisQParser responsible for fetching data and building a query.
 
 ## Quick start
 
-When you build the library by Maven:
+Build with Maven:
 
 ```shell
 mvn install
 ```
 
-You should put the library (solr-redis-*.jar) into solr lib directory ($SOLR_HOME/lib). Then query parser plugin should be configured in solrconfig.xml. You have to put the lines presented below in "config" section of solrconfig.xml:
+Put the library (solr-redis-*.jar) in Solr lib directory ($SOLR_HOME/lib). 
+
+Configure the query parser plugin in solrconfig.xml. Add the following to the "config" section of solrconfig.xml:
 
 ```xml
 <queryParser name="redis" class="com.sematext.solr.redis.RedisQParserPlugin">
@@ -35,18 +37,18 @@ You should put the library (solr-redis-*.jar) into solr lib directory ($SOLR_HOM
  * **operator** - Operator which connects terms taken from Redis. Allowed values are "AND" and "OR". Default operator is OR (optional)
  
 ZRANGE and ZREVRANGE specific parameters: 
- * **min** - Minimum value of range (optional)
- * **key** - Maximum value of range (required)
+ * **min** - Minimal value of range (optional)
+ * **key** - Maximal value of range (required)
 
 Examples of usage: 
  * q=\*:\*&fq={!redis method=smembers key=some_key}field
  * q=\*:\*&fq={!redis method=zrevrangebyscore key=some_key min=1 max=1000}field
  * q=\*:\*&fq={!redis method=zrevrangebyscore key=some_key max=213}field
 
-### Allowed configuration parameter of RedisQParserPlugin (secrion in solrconfig.xml):
- * **host** - Host of redis server (can be also host:port)
- * **maxConnections** - Maximum number of connections to Redis
- * **retries** - Number of retries when redis command fails
- * **database** - Redis database id
- * **password** - Password to Redis
- * **timeout** - Read timeout for Redis client
+### Allowed configuration parameter for RedisQParserPlugin (section in solrconfig.xml):
+ * **host** - Host of the Redis server (can also be host:port)
+ * **maxConnections** - Maximal number of connections to Redis
+ * **retries** - Number of retries before Redis command fails
+ * **database** - Redis database ID
+ * **password** - Redis password
+ * **timeout** - Redis client read timeout
