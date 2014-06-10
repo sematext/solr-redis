@@ -99,6 +99,31 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='2']");
   }
 
+  @Test
+  public void shouldFindSingleDocumentOnZrevRangeByScoreWithOpenRange() {
+    String[] doc1 = {"id", "1", "string_field", "member1"};
+    String[] doc2 = {"id", "2", "string_field", "member2"};
+    String[] doc3 = {"id", "3", "string_field", "member3"};
+    String[] doc4 = {"id", "4", "string_field", "member4"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(adoc(doc4));
+    assertU(commit());
+
+    jedis.flushAll();
+
+    jedis.zadd("test_key", 1, "member1");
+    jedis.zadd("test_key", 2, "member2");
+    jedis.zadd("test_key", 3, "member3");
+    jedis.zadd("test_key", 4, "member4");
+
+    ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis method=zrevrangebyscore key=test_key min=(2 max=(4}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='3']");
+  }
+
   @After
   @Override
   public void tearDown() throws Exception {

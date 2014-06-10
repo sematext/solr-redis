@@ -80,38 +80,40 @@ public class RedisQParser extends QParser {
     BooleanQuery booleanQuery = new BooleanQuery(true);
     int booleanClausesTotal = 0;
 
-    log.debug("Preparing a query for " + redisObjectsCollection.size() + " redis objects for field: " + fieldName);
+    if (redisObjectsCollection != null) {
+      log.debug("Preparing a query for " + redisObjectsCollection.size() + " redis objects for field: " + fieldName);
 
-    for (String termString : redisObjectsCollection) {
-      try {
-        TokenStream tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
-        BytesRef term = new BytesRef();
-        if (tokenStream != null) {
-          CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
-          tokenStream.reset();
+      for (String termString : redisObjectsCollection) {
+        try {
+          TokenStream tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
+          BytesRef term = new BytesRef();
+          if (tokenStream != null) {
+            CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+            tokenStream.reset();
 
-          int counter = 0;
-          while (tokenStream.incrementToken()) {
+            int counter = 0;
+            while (tokenStream.incrementToken()) {
 
-            log.trace("Taking {} token from query string from {} for field: ",
-                    ++counter, termString, fieldName);
+              log.trace("Taking {} token from query string from {} for field: ",
+                      ++counter, termString, fieldName);
 
-            term = new BytesRef(charAttribute);
+              term = new BytesRef(charAttribute);
+              TermQuery termQuery = new TermQuery(new Term(fieldName, term));
+              booleanQuery.add(termQuery, this.operator);
+              ++booleanClausesTotal;
+            }
+
+            tokenStream.end();
+            tokenStream.close();
+          } else {
+            term.copyChars(termString);
             TermQuery termQuery = new TermQuery(new Term(fieldName, term));
             booleanQuery.add(termQuery, this.operator);
             ++booleanClausesTotal;
           }
-
-          tokenStream.end();
-          tokenStream.close();
-        } else {
-          term.copyChars(termString);
-          TermQuery termQuery = new TermQuery(new Term(fieldName, term));
-          booleanQuery.add(termQuery, this.operator);
-          ++booleanClausesTotal;
+        } catch (IOException ex) {
+          log.error("Error occured during processing token stream.", ex);
         }
-      } catch (IOException ex) {
-        log.error("Error occured during processing token stream.", ex);
       }
     }
 
