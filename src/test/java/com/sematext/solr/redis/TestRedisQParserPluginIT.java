@@ -100,7 +100,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
   }
 
   @Test
-  public void shouldFindSingleDocumentOnZrevRangeByScoreWithOpenRange() {
+  public void shouldFindSingleDocumentOnZrevRangeByScoreWithInfSymbol() {
     String[] doc1 = {"id", "1", "string_field", "member1"};
     String[] doc2 = {"id", "2", "string_field", "member2"};
     String[] doc3 = {"id", "3", "string_field", "member3"};
@@ -116,12 +116,11 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     jedis.zadd("test_key", 1, "member1");
     jedis.zadd("test_key", 2, "member2");
     jedis.zadd("test_key", 3, "member3");
-    jedis.zadd("test_key", 4, "member4");
 
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
-    params.add("fq", "{!redis method=zrevrangebyscore key=test_key min=(2 max=(4}string_field");
-    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='3']");
+    params.add("fq", "{!redis method=zrevrangebyscore key=test_key min='-inf' max=1}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
   }
 
   @After
