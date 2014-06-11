@@ -3,9 +3,27 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sematext</groupId>
     <artifactId>solr-redis</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
-    <name>Solr Redis Plugin</name>
+    <name>Solr Redis </name>
+    <description>Solr Redis plugin</description>
+    <url>http://sematext.com/</url>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>
+            scm:git:git://github.com/sematext/solr-redis.git
+        </connection>
+        <url>https://github.com/sematext/solr-redis.git</url>
+        <developerConnection>
+            scm:git:git://github.com/sematext/solr-redis.git
+        </developerConnection>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -188,6 +206,15 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                    </instructions>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
