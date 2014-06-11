@@ -8,6 +8,13 @@
     <name>Solr Redis </name>
     <description>Solr Redis plugin</description>
     <url>http://sematext.com/</url>
+    
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -15,6 +22,22 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+    
+    <developers>
+        <developer>
+            <id>prog</id>
+            <name>Paweł Róg</name>
+            <email>pawel.rog@sematext.com</email>
+            <organization>Sematext</organization>
+        </developer>
+        <developer>
+            <id>otis</id>
+            <name>Otis Gospodnetic</name>
+            <email>otis@sematext.com</email>
+            <organization>Sematext</organization>
+        </developer>
+    </developers>
+
     <scm>
         <connection>
             scm:git:git://github.com/sematext/solr-redis.git
@@ -214,6 +237,19 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                     </instructions>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
