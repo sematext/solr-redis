@@ -27,6 +27,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
  * <li><b>key</b> - Key used to fetch data from Redis. (required)</li>
  * <li><b>operator</b> - Operator which connects terms taken from Redis. Allowed values are "AND" and "OR".
  * Default operator is OR. (optional)</li>
+ * <li><b>useAnalyzer</b> - Turns on and off query time analyzer true/false (optinal - default is true)</li>
  * </ul>
  * <p>
  * ZRANGEBYSCORE and ZREVRANGEBYSCORE specific parameters: <br> <ul>

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
@@ -42,6 +43,7 @@ public class RedisQParser extends QParser {
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
   private String redisMethod;
   private String redisKey;
+  private boolean useQueryTimeAnalyzer;
   private int maxJedisRetries;
 
   RedisQParser(String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req, JedisPool jedisPool) {
@@ -56,6 +58,7 @@ public class RedisQParser extends QParser {
     redisMethod = localParams.get("method");
     redisKey = localParams.get("key");
     String operatorString = localParams.get("operator", "OR");
+    useQueryTimeAnalyzer = Boolean.parseBoolean(localParams.get("useAnalyzer", "true"));
 
     if (redisMethod == null) {
       log.error("No method argument passed to RedisQParser.");
@@ -91,7 +94,13 @@ public class RedisQParser extends QParser {
 
       for (String termString : redisObjectsCollection) {
         try {
-          TokenStream tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
+          TokenStream tokenStream = null;
+          if (useQueryTimeAnalyzer) {
+            tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
+          } else {
+            tokenStream = new KeywordAnalyzer().tokenStream(fieldName, termString);
+          }
+
           BytesRef term = new BytesRef();
           if (tokenStream != null) {
             CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);

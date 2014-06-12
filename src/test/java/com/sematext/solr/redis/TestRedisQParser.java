@@ -158,4 +158,34 @@ public class TestRedisQParser {
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
   }
+
+  public void shouldTurnAnalysisOff() throws SyntaxError {
+    when(localParamsMock.get("method")).thenReturn("smembers");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("useAnalyzer")).thenReturn("false");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<>(Arrays.asList("123 123", "321")));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    Query query = redisQParser.parse();
+    verify(jedisMock).smembers("simpleKey");
+    Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(2, terms.size());
+  }
+
+  public void shouldTurnAnalysisOn() throws SyntaxError {
+    when(localParamsMock.get("method")).thenReturn("smembers");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("useAnalyzer")).thenReturn("false");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<>(Arrays.asList("123 123", "321")));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    Query query = redisQParser.parse();
+    verify(jedisMock).smembers("simpleKey");
+    Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(3, terms.size());
+  }
 }
