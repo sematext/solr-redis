@@ -19,7 +19,9 @@ import org.apache.solr.search.QueryParsing;
 import org.apache.solr.search.SyntaxError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisCommands;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisException;
 
 /**
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
@@ -35,21 +37,24 @@ public class RedisQParser extends QParser {
       }
   };
 
-  private final JedisCommands jedis;
+  private final JedisPool jedisPool;
   private Collection<String> redisObjectsCollection = null;
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
+  private String redisMethod;
+  private String redisKey;
+  private int maxJedisRetries;
 
-  RedisQParser(String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req, JedisCommands jedis) {
-    this(qstr, localParams, params, req, jedis, 0);
+  RedisQParser(String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req, JedisPool jedisPool) {
+    this(qstr, localParams, params, req, jedisPool, 0);
   }
 
   RedisQParser (String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req,
-          JedisCommands jedis, int maxJedisRetries) {
+          JedisPool jedisPool, int maxJedisRetries) {
     super(qstr, localParams, params, req);
-    this.jedis = jedis;
+    this.jedisPool = jedisPool;
 
-    String redisMethod = localParams.get("method");
-    String redisKey = localParams.get("key");
+    redisMethod = localParams.get("method");
+    redisKey = localParams.get("key");
     String operatorString = localParams.get("operator", "OR");
 
     if (redisMethod == null) {
@@ -70,8 +75,7 @@ public class RedisQParser extends QParser {
     } else {
       operator = BooleanClause.Occur.SHOULD;
     }
-
-    fetchDataFromRedis(redisMethod, redisKey, maxJedisRetries, params);
+    this.maxJedisRetries = maxJedisRetries;
   }
 
   @Override
@@ -79,6 +83,8 @@ public class RedisQParser extends QParser {
     String fieldName = localParams.get(QueryParsing.V);
     BooleanQuery booleanQuery = new BooleanQuery(true);
     int booleanClausesTotal = 0;
+
+    fetchDataFromRedis(redisMethod, redisKey, maxJedisRetries, params);
 
     if (redisObjectsCollection != null) {
       log.debug("Preparing a query for " + redisObjectsCollection.size() + " redis objects for field: " + fieldName);
@@ -122,12 +128,13 @@ public class RedisQParser extends QParser {
     return booleanQuery;
   }
 
-  private Collection<String> fetchSmembers(String redisKey, int maxJedisRetries) {
+  private Collection<String> fetchSmembers(Jedis jedis, String redisKey, int maxJedisRetries) {
     log.debug("Fetching smembers from Redis for key: " + redisKey);
     return jedis.smembers(redisKey);
   }
 
-  private Collection<String> fetchRevrangeByScore(String redisKey, int maxJedisRetries, SolrParams params) {
+  private Collection<String> fetchRevrangeByScore(Jedis jedis, String redisKey, int maxJedisRetries,
+          SolrParams params) {
     String min = localParams.get("min");
     String max = localParams.get("max");
     if (min == null || "".equals(min)) {
@@ -144,13 +151,17 @@ public class RedisQParser extends QParser {
           SolrParams additionalParams) {
     int retries = 0;
     while (redisObjectsCollection == null && retries++ < maxJedisRetries + 1) {
+      Jedis jedis = null;
       try {
+        jedis = jedisPool.getResource();
         if (redisMethod.equalsIgnoreCase("smembers")) {
-          redisObjectsCollection = fetchSmembers(redisKey, maxJedisRetries);
+          redisObjectsCollection = fetchSmembers(jedis, redisKey, maxJedisRetries);
         } else if (redisMethod.equalsIgnoreCase("zrevrangebyscore") || redisMethod.equalsIgnoreCase("zrangebyscore")) {
-          redisObjectsCollection = fetchRevrangeByScore(redisKey, maxJedisRetries, params);
+          redisObjectsCollection = fetchRevrangeByScore(jedis, redisKey, maxJedisRetries, params);
         }
-      } catch (Exception ex) {
+        jedisPool.returnResource(jedis);
+      } catch (JedisException ex) {
+        jedisPool.returnBrokenResource(jedis);
         log.debug("There was an error fetching data from redis. Retrying", ex);
         if (retries >= maxJedisRetries + 1) {
           throw ex;

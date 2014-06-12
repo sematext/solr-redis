@@ -13,6 +13,7 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Protocol;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * ParserPlugin which builds a query parser basing on data stored in Redis.
@@ -72,15 +73,7 @@ public class RedisQParserPlugin extends QParserPlugin {
 
   @Override
   public QParser createParser(String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req) {
-    Jedis jedisConnector = null;
-    try {
-      jedisConnector = jedisConnectorPool.getResource();
-      return new RedisQParser(qstr, localParams, params, req, jedisConnector, retriesNumber);
-    } finally {
-      if (jedisConnector != null) {
-        jedisConnectorPool.returnResource(jedisConnector);
-      }
-    }
+    return new RedisQParser(qstr, localParams, params, req, jedisConnectorPool, retriesNumber);
   }
 
   @VisibleForTesting
