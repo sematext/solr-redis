@@ -147,9 +147,8 @@ public class RedisQParser extends QParser {
       try {
         if (redisMethod.equalsIgnoreCase("smembers")) {
           redisObjectsCollection = fetchSmembers(redisKey, maxJedisRetries);
-        } else if (redisMethod.equalsIgnoreCase("zrevrangebyscore") ||
-                redisMethod.equalsIgnoreCase("zrangebyscore")) {
-        redisObjectsCollection = fetchRevrangeByScore(redisKey, maxJedisRetries, params);
+        } else if (redisMethod.equalsIgnoreCase("zrevrangebyscore") || redisMethod.equalsIgnoreCase("zrangebyscore")) {
+          redisObjectsCollection = fetchRevrangeByScore(redisKey, maxJedisRetries, params);
         }
       } catch (Exception ex) {
         log.warn("There was an error fetching data from redis.", ex);
