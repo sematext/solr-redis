@@ -2,7 +2,11 @@ package com.sematext.solr.redis;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
@@ -22,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Tuple;
 import redis.clients.jedis.exceptions.JedisException;
 
 /**
@@ -39,7 +44,8 @@ public class RedisQParser extends QParser {
   };
 
   private final JedisPool jedisPool;
-  private Collection<String> redisObjectsCollection = null;
+  private Set<String> redisObjectsCollection = null;
+  private Map<String, Float> scores = null;
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
   private String redisMethod;
   private String redisKey;
@@ -120,6 +126,9 @@ public class RedisQParser extends QParser {
 
               term = new BytesRef(charAttribute);
               TermQuery termQuery = new TermQuery(new Term(fieldName, term));
+              if (scores != null && !scores.isEmpty()) {
+                termQuery.setBoost(scores.containsKey(termString) ? scores.get(termString) : 1.0f);
+              }
               booleanQuery.add(termQuery, this.operator);
               ++booleanClausesTotal;
             }
@@ -143,12 +152,12 @@ public class RedisQParser extends QParser {
     return booleanQuery;
   }
 
-  private Collection<String> fetchSmembers(Jedis jedis, String redisKey, int maxJedisRetries) {
+  private void fetchSmembers(Jedis jedis, String redisKey, int maxJedisRetries) {
     log.debug("Fetching smembers from Redis for key: " + redisKey);
-    return jedis.smembers(redisKey);
+    redisObjectsCollection = jedis.smembers(redisKey);
   }
 
-  private Collection<String> fetchRevrangeByScore(Jedis jedis, String redisKey, int maxJedisRetries,
+  private void fetchRevrangeByScore(Jedis jedis, String redisKey, int maxJedisRetries,
           SolrParams params) {
     String min = localParams.get("min");
     String max = localParams.get("max");
@@ -159,7 +168,13 @@ public class RedisQParser extends QParser {
       max = "+inf";
     }
     log.debug("Fetching zrevrangebyscore from Redis for key: {} ({}, {})", redisKey, min, max);
-    return jedis.zrevrangeByScore(redisKey, max, min);
+    Set<Tuple> objectsWithScores = jedis.zrevrangeByScoreWithScores(redisKey, max, min);
+    redisObjectsCollection = new HashSet<>();
+    scores = new HashMap<>();
+    for (Tuple object: objectsWithScores) {
+      redisObjectsCollection.add(object.getElement());
+      scores.put(object.getElement(), (float)object.getScore());
+    }
   }
 
   private void fetchDataFromRedis(String redisMethod, String redisKey, int maxJedisRetries,
@@ -170,9 +185,9 @@ public class RedisQParser extends QParser {
       try {
         jedis = jedisPool.getResource();
         if (redisMethod.equalsIgnoreCase("smembers")) {
-          redisObjectsCollection = fetchSmembers(jedis, redisKey, maxJedisRetries);
+          fetchSmembers(jedis, redisKey, maxJedisRetries);
         } else if (redisMethod.equalsIgnoreCase("zrevrangebyscore") || redisMethod.equalsIgnoreCase("zrangebyscore")) {
-          redisObjectsCollection = fetchRevrangeByScore(jedis, redisKey, maxJedisRetries, params);
+          fetchRevrangeByScore(jedis, redisKey, maxJedisRetries, params);
         }
         jedisPool.returnResource(jedis);
       } catch (JedisException ex) {

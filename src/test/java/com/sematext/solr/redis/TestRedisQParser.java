@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Tuple;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class TestRedisQParser {
@@ -113,13 +114,14 @@ public class TestRedisQParser {
     when(localParamsMock.get("method")).thenReturn("zrangebyscore");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.zrevrangeByScore(any(String.class), any(String.class), any(String.class))).
-            thenReturn(new HashSet<String>(Arrays.asList("123", "321")));
+    when(jedisMock.zrevrangeByScoreWithScores(any(String.class), any(String.class), any(String.class))).
+            thenReturn(new HashSet<Tuple>(Arrays.asList(
+                    new Tuple("123", (double)1.0f), new Tuple("321", (double)1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     Query query = redisQParser.parse();
-    verify(jedisMock).zrevrangeByScore("simpleKey", "+inf", "-inf");
+    verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "+inf", "-inf");
     Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
@@ -132,13 +134,14 @@ public class TestRedisQParser {
     when(localParamsMock.get("min")).thenReturn("1");
     when(localParamsMock.get("max")).thenReturn("100");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.zrevrangeByScore(any(String.class), any(String.class), any(String.class))).
-            thenReturn(new HashSet<String>(Arrays.asList("123", "321")));
+    when(jedisMock.zrevrangeByScoreWithScores(any(String.class), any(String.class), any(String.class))).
+            thenReturn(new HashSet<Tuple>(Arrays.asList(
+                                    new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     Query query = redisQParser.parse();
-    verify(jedisMock).zrevrangeByScore("simpleKey", "100", "1");
+    verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "100", "1");
     Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
@@ -149,13 +152,14 @@ public class TestRedisQParser {
     when(localParamsMock.get("method")).thenReturn("zrangebyscore");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.zrevrangeByScore(any(String.class), any(String.class), any(String.class))).
-            thenReturn(new HashSet<String>(Arrays.asList("123", "321")));
+    when(jedisMock.zrevrangeByScoreWithScores(any(String.class), any(String.class), any(String.class))).
+            thenReturn(new HashSet<Tuple>(Arrays.asList(
+                                    new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     Query query = redisQParser.parse();
-    verify(jedisMock).zrevrangeByScore("simpleKey", "+inf", "-inf");
+    verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "+inf", "-inf");
     Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
