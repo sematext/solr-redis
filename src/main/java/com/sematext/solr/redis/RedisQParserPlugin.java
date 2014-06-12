@@ -80,6 +80,11 @@ public class RedisQParserPlugin extends QParserPlugin {
     this.jedisConnectorPool = jedisConnectorPool;
   }
 
+  @VisibleForTesting
+  public void setRetriesNumber(int retriesNumber) {
+    this.retriesNumber = retriesNumber;
+  }
+
   @Override
   public void init(NamedList args) {
     if (args != null) {

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class TestRedisQParser {
   
@@ -190,5 +191,52 @@ public class TestRedisQParser {
     Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(3, terms.size());
+  }
+
+  @Test
+  public void shouldRetryWhenRedisFailed() throws SyntaxError {
+    when(localParamsMock.get("method")).thenReturn("smembers");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("useAnalyzer")).thenReturn("true");
+    when(localParamsMock.get("retries")).thenReturn("2");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new WhitespaceAnalyzer(Version.LUCENE_48));
+    when(jedisPoolMock.getResource()).thenReturn(new JedisStub(JedisStub.Action.EXCEPTION, JedisStub.Action.TERM));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock, 2);
+    Query query = redisQParser.parse();
+    Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(1, terms.size());
+  }
+
+  private static class JedisStub extends Jedis{
+    public enum Action {
+      EXCEPTION,
+      TERM
+    }
+
+    private final Action [] actions;
+    private int counter;
+
+    public JedisStub(Action ... actions) {
+      super("localhost");
+      counter = 0;
+      this.actions = actions;
+    }
+
+    @Override
+    public Set<String> smembers(String key) {
+      try {
+        if (actions[counter] == Action.TERM) {
+          return new HashSet<>(Arrays.asList("term"));
+        } if (actions[counter] == Action.EXCEPTION) {
+          throw new JedisConnectionException("");
+        }
+      } finally {
+        counter++;
+      }
+      return null;
+    }
   }
 }
