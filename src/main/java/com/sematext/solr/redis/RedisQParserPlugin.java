@@ -10,10 +10,8 @@ import org.apache.solr.search.QParserPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Protocol;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * ParserPlugin which builds a query parser basing on data stored in Redis.

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
@@ -159,12 +160,13 @@ public class TestRedisQParser {
     Assert.assertEquals(2, terms.size());
   }
 
+  @Test
   public void shouldTurnAnalysisOff() throws SyntaxError {
     when(localParamsMock.get("method")).thenReturn("smembers");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get("useAnalyzer")).thenReturn("false");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<>(Arrays.asList("123 123", "321")));
+    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<>(Arrays.asList("123 124", "321")));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     Query query = redisQParser.parse();
     verify(jedisMock).smembers("simpleKey");
@@ -172,15 +174,16 @@ public class TestRedisQParser {
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
   }
-
+  
+  @Test
   public void shouldTurnAnalysisOn() throws SyntaxError {
     when(localParamsMock.get("method")).thenReturn("smembers");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
-    when(localParamsMock.get("useAnalyzer")).thenReturn("false");
+    when(localParamsMock.get("useAnalyzer")).thenReturn("true");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
-    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<>(Arrays.asList("123 123", "321")));
+    when(schema.getQueryAnalyzer()).thenReturn(new WhitespaceAnalyzer(Version.LUCENE_48));
+    when(jedisMock.smembers(any(String.class))).thenReturn(new HashSet<>(Arrays.asList("123 124", "321")));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     Query query = redisQParser.parse();
     verify(jedisMock).smembers("simpleKey");

@@ -57,8 +57,8 @@ public class RedisQParser extends QParser {
 
     redisMethod = localParams.get("method");
     redisKey = localParams.get("key");
-    String operatorString = localParams.get("operator", "OR");
-    useQueryTimeAnalyzer = Boolean.parseBoolean(localParams.get("useAnalyzer", "true"));
+    String operatorString = localParams.get("operator");
+    String useAnalyzerParam = localParams.get("useAnalyzer");
 
     if (redisMethod == null) {
       log.error("No method argument passed to RedisQParser.");
@@ -77,6 +77,12 @@ public class RedisQParser extends QParser {
       operator = BooleanClause.Occur.MUST;
     } else {
       operator = BooleanClause.Occur.SHOULD;
+    }
+
+    if (useAnalyzerParam == null || Boolean.parseBoolean(useAnalyzerParam)) {
+      useQueryTimeAnalyzer = true;
+    } else {
+      useQueryTimeAnalyzer = false;
     }
     this.maxJedisRetries = maxJedisRetries;
   }
