@@ -94,7 +94,7 @@ public class RedisQParser extends QParser {
             int counter = 0;
             while (tokenStream.incrementToken()) {
 
-              log.trace("Taking {} token from query string from {} for field: ",
+              log.trace("Taking {} token from query string from {} for field: {}",
                       ++counter, termString, fieldName);
 
               term = new BytesRef(charAttribute);
@@ -117,7 +117,7 @@ public class RedisQParser extends QParser {
       }
     }
 
-    log.debug("Prepared a query for field {} with {} boolean clauses", booleanClausesTotal);
+    log.debug("Prepared a query for field {} with {} boolean clauses", fieldName, booleanClausesTotal);
 
     return booleanQuery;
   }
@@ -151,7 +151,10 @@ public class RedisQParser extends QParser {
           redisObjectsCollection = fetchRevrangeByScore(redisKey, maxJedisRetries, params);
         }
       } catch (Exception ex) {
-        log.warn("There was an error fetching data from redis.", ex);
+        log.debug("There was an error fetching data from redis. Retrying", ex);
+        if (retries >= maxJedisRetries + 1) {
+          throw ex;
+        }
       }
     }
   }
