@@ -34,7 +34,7 @@ Configure the query parser plugin in solrconfig.xml. Add the following to the "c
 
  * **method** - Method for Redis. Currently allowed: smembers, zrange, zrevrange (required)
  * **key** - Key used to fetch data from Redis (required)
- * **operator** - Operator which connects terms taken from Redis. Allowed values are "AND" and "OR". Default operator is OR (optional)
+ * **operator** - Operator which connects terms taken from Redis. Allowed values are AND/OR (optional - default is OR)
  * **useAnalyzer** - Turns on and off query time analyzer true/false (optinal - default is true)
  
 ZRANGE and ZREVRANGE specific parameters: 
