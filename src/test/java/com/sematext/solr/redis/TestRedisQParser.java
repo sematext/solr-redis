@@ -111,7 +111,7 @@ public class TestRedisQParser {
 
   @Test
   public void shouldAddTermsFromRedisOnRangeByScoreMethodWithDefaultParams() throws SyntaxError, IOException {
-    when(localParamsMock.get("method")).thenReturn("zrangebyscore");
+    when(localParamsMock.get("method")).thenReturn("zrevrangebyscore");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.zrevrangeByScoreWithScores(any(String.class), any(String.class), any(String.class))).
@@ -129,7 +129,7 @@ public class TestRedisQParser {
 
     @Test
   public void shouldAddTermsFromRedisOnRangeByScoreMethodWithCustomRange() throws SyntaxError, IOException {
-    when(localParamsMock.get("method")).thenReturn("zrangebyscore");
+    when(localParamsMock.get("method")).thenReturn("zrevrangebyscore");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get("min")).thenReturn("1");
     when(localParamsMock.get("max")).thenReturn("100");
@@ -149,7 +149,7 @@ public class TestRedisQParser {
 
   @Test
   public void shouldAddTermsFromRedisOnRevrangeByScoreMethodWithDefaultParams() throws SyntaxError, IOException {
-    when(localParamsMock.get("method")).thenReturn("zrangebyscore");
+    when(localParamsMock.get("method")).thenReturn("zrevrangebyscore");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.zrevrangeByScoreWithScores(any(String.class), any(String.class), any(String.class))).
