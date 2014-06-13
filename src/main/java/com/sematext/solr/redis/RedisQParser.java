@@ -39,7 +39,6 @@ public class RedisQParser extends QParser {
       {
         add("smembers");
         add("zrevrangebyscore");
-        add("zrangebyscore");
       }
   };
 
@@ -186,7 +185,7 @@ public class RedisQParser extends QParser {
         jedis = jedisPool.getResource();
         if (redisMethod.equalsIgnoreCase("smembers")) {
           fetchSmembers(jedis, redisKey, maxJedisRetries);
-        } else if (redisMethod.equalsIgnoreCase("zrevrangebyscore") || redisMethod.equalsIgnoreCase("zrangebyscore")) {
+        } else if (redisMethod.equalsIgnoreCase("zrevrangebyscore")) {
           fetchRevrangeByScore(jedis, redisKey, maxJedisRetries, params);
         }
         jedisPool.returnResource(jedis);
