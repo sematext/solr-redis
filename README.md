@@ -32,12 +32,12 @@ Configure the query parser plugin in solrconfig.xml. Add the following to the "c
 
 ### Allowed parameters for the RedisQParserPlugin:
 
- * **method** - Method for Redis. Currently allowed: smembers, zrange, zrevrange (required)
+ * **method** - Method for Redis. Currently allowed: smembers, zrevrangebyscore (required)
  * **key** - Key used to fetch data from Redis (required)
  * **operator** - Operator which connects terms taken from Redis. Allowed values are AND/OR (optional - default is OR)
  * **useAnalyzer** - Turns on and off query time analyzer true/false (optinal - default is true)
  
-ZRANGE and ZREVRANGE specific parameters: 
+ZREVRANGEBYSCORE specific parameters: 
  * **min** - Minimal value of range (optional)
  * **key** - Maximal value of range (required)
 
