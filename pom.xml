@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sematext</groupId>
     <artifactId>solr-redis</artifactId>
-    <version>1.0.1</version>
+    <version>1.2.0-dev</version>
     <packaging>jar</packaging>
     <name>Solr Redis </name>
     <description>Solr Redis plugin</description>
     <url>http://sematext.com/</url>
-    
+
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -22,7 +22,7 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    
+
     <developers>
         <developer>
             <id>prog</id>
@@ -88,7 +88,7 @@
         <solr.version>4.8.1</solr.version>
         <junit.version>4.11</junit.version>
         <mockito.version>1.9.5</mockito.version>
-        
+
         <skip.unit.tests>false</skip.unit.tests>
         <skip.integration.tests>true</skip.integration.tests>
     </properties>
@@ -138,9 +138,9 @@
             <version>1.1.3</version>
             <scope>test</scope>
         </dependency>
-        
+
     </dependencies>
-  
+
     <build>
         <testSourceDirectory>src/test/java</testSourceDirectory>
         <testResources>
@@ -218,7 +218,7 @@
                     </excludes>
                 </configuration>
             </plugin>
-            
+
             <!-- Used for integration tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

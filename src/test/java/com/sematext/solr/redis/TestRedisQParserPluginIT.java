@@ -28,11 +28,12 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
       jedis = new Jedis("localhost");
       jedis.flushAll();
       jedis.sadd("test_key", "test");
+
     } catch (Exception ex) {}
   }
 
   @Test
-  public void shouldFindSingleDocument() {
+  public void shouldFindSingleDocumentSmembers() {
     String[] doc = {"id", "1", "string_field", "test"};
     assertU(adoc(doc));
     assertU(commit());{
@@ -40,12 +41,12 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
-    params.add("fq", "{!redis method=smembers key=test_key}string_field");
+    params.add("fq", "{!redis command=smembers key=test_key}string_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
   }
 
   @Test
-  public void shouldFindNoDocumentOnMissingRedisKey() {
+  public void shouldFindNoDocumentOnMissingRedisKeySmembers() {
     String[] doc = {"id", "1", "string_field", "test"};
     assertU(adoc(doc));
     assertU(commit());
@@ -54,12 +55,12 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
-    params.add("fq", "{!redis method=smembers key=test_key}string_field");
+    params.add("fq", "{!redis command=smembers key=test_key}string_field");
     assertQ(req(params), "*[count(//doc)=0]");
   }
 
   @Test
-  public void shouldFindThreeDocuments() {
+  public void shouldFindThreeDocumentsSmembers() {
     String[] doc1 = {"id", "1", "string_field", "test"};
     String[] doc2 = {"id", "2", "string_field", "other_key"};
     String[] doc3 = {"id", "3", "string_field", "other_key"};
@@ -72,7 +73,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
-    params.add("fq", "{!redis method=smembers key=test_key}string_field");
+    params.add("fq", "{!redis command=smembers key=test_key}string_field");
     assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']",
             "//result/doc[2]/str[@name='id'][.='2']", "//result/doc[3]/str[@name='id'][.='3']");
   }
@@ -95,7 +96,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
-    params.add("fq", "{!redis method=zrevrangebyscore key=test_key min=2 max=3}string_field");
+    params.add("fq", "{!redis command=zrevrangebyscore key=test_key min=2 max=3}string_field");
     assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='2']");
   }
 
@@ -119,7 +120,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
-    params.add("fq", "{!redis method=zrevrangebyscore key=test_key min='-inf' max=1}string_field");
+    params.add("fq", "{!redis command=zrevrangebyscore key=test_key min='-inf' max=1}string_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
   }
 
@@ -132,6 +133,4 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     } catch (Exception ex) {
     }
   }
-
-
 }

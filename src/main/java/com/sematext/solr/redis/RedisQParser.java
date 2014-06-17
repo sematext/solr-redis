@@ -1,13 +1,11 @@
 package com.sematext.solr.redis;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import com.sematext.solr.redis.command.Command;
+import com.sematext.solr.redis.command.Smembers;
+import com.sematext.solr.redis.command.Zrevrangebyscore;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -26,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.Tuple;
 import redis.clients.jedis.exceptions.JedisException;
 
 /**
@@ -35,19 +32,18 @@ import redis.clients.jedis.exceptions.JedisException;
 public class RedisQParser extends QParser {
   private static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
 
-  private static final Set<String>  ALLOWED_METHODS = new HashSet<String>(){
-      {
-        add("smembers");
-        add("zrevrangebyscore");
-        add("zrangebyscore");
-      }
-  };
+  private static final Map<String, Command> commands;
+  static {
+    commands = new HashMap<>();
+    commands.put("smembers", new Smembers());
+    commands.put("zrevrangebyscore", new Zrevrangebyscore());
+    commands.put("zrangebyscore", new Zrevrangebyscore());
+  }
 
   private final JedisPool jedisPool;
-  private Set<String> redisObjectsCollection = null;
-  private Map<String, Float> scores = null;
+  private Map<String, Float> results = null;
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
-  private String redisMethod;
+  private String redisCommand;
   private String redisKey;
   private boolean useQueryTimeAnalyzer;
   private int maxJedisRetries;
@@ -61,17 +57,17 @@ public class RedisQParser extends QParser {
     super(qstr, localParams, params, req);
     this.jedisPool = jedisPool;
 
-    redisMethod = localParams.get("method");
+    redisCommand = localParams.get("command");
     redisKey = localParams.get("key");
     String operatorString = localParams.get("operator");
     String useAnalyzerParam = localParams.get("useAnalyzer");
 
-    if (redisMethod == null) {
-      log.error("No method argument passed to RedisQParser.");
-      throw new IllegalArgumentException("No method argument passed to RedisQParser.");
-    } else if (!ALLOWED_METHODS.contains(redisMethod)) {
-      log.error("Wrong Redis method: {}", redisMethod);
-      throw new IllegalArgumentException("Wrong Redis method.");
+    if (redisCommand == null) {
+      log.error("No command argument passed to RedisQParser.");
+      throw new IllegalArgumentException("No command argument passed to RedisQParser.");
+    } else if (!commands.containsKey(redisCommand)) {
+      log.error("Wrong Redis command: {}", redisCommand);
+      throw new IllegalArgumentException(String.format("Wrong Redis command '%s'.", redisCommand));
     }
 
     if (redisKey == null || redisKey.isEmpty()) {
@@ -85,11 +81,8 @@ public class RedisQParser extends QParser {
       operator = BooleanClause.Occur.SHOULD;
     }
 
-    if (useAnalyzerParam == null || Boolean.parseBoolean(useAnalyzerParam)) {
-      useQueryTimeAnalyzer = true;
-    } else {
-      useQueryTimeAnalyzer = false;
-    }
+    useQueryTimeAnalyzer = useAnalyzerParam == null || Boolean.parseBoolean(useAnalyzerParam);
+
     this.maxJedisRetries = maxJedisRetries;
   }
 
@@ -99,14 +92,17 @@ public class RedisQParser extends QParser {
     BooleanQuery booleanQuery = new BooleanQuery(true);
     int booleanClausesTotal = 0;
 
-    fetchDataFromRedis(redisMethod, redisKey, maxJedisRetries, params);
+    fetchDataFromRedis(redisCommand, redisKey, maxJedisRetries);
 
-    if (redisObjectsCollection != null) {
-      log.debug("Preparing a query for " + redisObjectsCollection.size() + " redis objects for field: " + fieldName);
+    if (results != null) {
+      log.debug("Preparing a query for {} redis objects for field: {}", results.size(), fieldName);
 
-      for (String termString : redisObjectsCollection) {
+      for (Map.Entry<String, Float> entry : results.entrySet()) {
         try {
-          TokenStream tokenStream = null;
+          TokenStream tokenStream;
+          String termString = entry.getKey();
+          Float score = entry.getValue();
+
           if (useQueryTimeAnalyzer) {
             tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
           } else {
@@ -121,13 +117,12 @@ public class RedisQParser extends QParser {
             int counter = 0;
             while (tokenStream.incrementToken()) {
 
-              log.trace("Taking {} token from query string from {} for field: {}",
-                      ++counter, termString, fieldName);
+              log.trace("Taking {} token from query string from {} for field: {}", ++counter, termString, fieldName);
 
               term = new BytesRef(charAttribute);
               TermQuery termQuery = new TermQuery(new Term(fieldName, term));
-              if (scores != null && !scores.isEmpty()) {
-                termQuery.setBoost(scores.containsKey(termString) ? scores.get(termString) : 1.0f);
+              if (score != Float.NaN) {
+                termQuery.setBoost(score);
               }
               booleanQuery.add(termQuery, this.operator);
               ++booleanClausesTotal;
@@ -142,7 +137,7 @@ public class RedisQParser extends QParser {
             ++booleanClausesTotal;
           }
         } catch (IOException ex) {
-          log.error("Error occured during processing token stream.", ex);
+          log.error("Error occurred during processing token stream.", ex);
         }
       }
     }
@@ -152,44 +147,20 @@ public class RedisQParser extends QParser {
     return booleanQuery;
   }
 
-  private void fetchSmembers(Jedis jedis, String redisKey, int maxJedisRetries) {
-    log.debug("Fetching smembers from Redis for key: " + redisKey);
-    redisObjectsCollection = jedis.smembers(redisKey);
-  }
-
-  private void fetchRevrangeByScore(Jedis jedis, String redisKey, int maxJedisRetries,
-          SolrParams params) {
-    String min = localParams.get("min");
-    String max = localParams.get("max");
-    if (min == null || "".equals(min)) {
-      min = "-inf";
-    }
-    if (max == null || "".equals(max)) {
-      max = "+inf";
-    }
-    log.debug("Fetching zrevrangebyscore from Redis for key: {} ({}, {})", redisKey, min, max);
-    Set<Tuple> objectsWithScores = jedis.zrevrangeByScoreWithScores(redisKey, max, min);
-    redisObjectsCollection = new HashSet<>();
-    scores = new HashMap<>();
-    for (Tuple object: objectsWithScores) {
-      redisObjectsCollection.add(object.getElement());
-      scores.put(object.getElement(), (float)object.getScore());
-    }
-  }
-
-  private void fetchDataFromRedis(String redisMethod, String redisKey, int maxJedisRetries,
-          SolrParams additionalParams) {
+  private void fetchDataFromRedis(String redisCommand, String redisKey, int maxJedisRetries) {
     int retries = 0;
-    while (redisObjectsCollection == null && retries++ < maxJedisRetries + 1) {
+    final Command command = commands.get(redisCommand);
+    Map<String, Float> result;
+
+    while (results == null && retries++ < maxJedisRetries + 1) {
       Jedis jedis = null;
       try {
         jedis = jedisPool.getResource();
-        if (redisMethod.equalsIgnoreCase("smembers")) {
-          fetchSmembers(jedis, redisKey, maxJedisRetries);
-        } else if (redisMethod.equalsIgnoreCase("zrevrangebyscore") || redisMethod.equalsIgnoreCase("zrangebyscore")) {
-          fetchRevrangeByScore(jedis, redisKey, maxJedisRetries, params);
-        }
+
+        result = command.execute(jedis, redisKey, localParams);
+
         jedisPool.returnResource(jedis);
+        results = result;
       } catch (JedisException ex) {
         jedisPool.returnBrokenResource(jedis);
         log.debug("There was an error fetching data from redis. Retrying", ex);
