@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/sematext/solr-redis.svg)](https://travis-ci.org/sematext/solr-redis)
 
-Solr Redis Extensions 
+Solr Redis Extensions
 =====================
 
 
@@ -16,7 +16,7 @@ Build with Maven:
 mvn install
 ```
 
-Put the library (solr-redis-*.jar) in Solr lib directory ($SOLR_HOME/lib). 
+Put the library (solr-redis-*.jar) in Solr lib directory ($SOLR_HOME/lib).
 
 Configure the query parser plugin in solrconfig.xml. Add the following to the "config" section of solrconfig.xml:
 
@@ -36,12 +36,12 @@ Configure the query parser plugin in solrconfig.xml. Add the following to the "c
  * **key** - Key used to fetch data from Redis (required)
  * **operator** - Operator which connects terms taken from Redis. Allowed values are AND/OR (optional - default is OR)
  * **useAnalyzer** - Turns on and off query time analyzer true/false (optinal - default is true)
- 
-ZREVRANGEBYSCORE specific parameters: 
+
+ZREVRANGEBYSCORE specific parameters:
  * **min** - Minimal value of range (optional)
  * **key** - Maximal value of range (required)
 
-Examples of usage: 
+Examples of usage:
  * q=\*:\*&fq={!redis method=smembers key=some_key}field
  * q=\*:\*&fq={!redis method=zrevrangebyscore key=some_key min=1 max=1000}field
  * q=\*:\*&fq={!redis method=zrevrangebyscore key=some_key max=213}field

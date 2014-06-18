@@ -1,6 +1,5 @@
 package com.sematext.solr.redis;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
@@ -21,7 +20,7 @@ import redis.clients.jedis.Protocol;
  * <p>
  * Allowed parameters for the RedisQParserPlugin are:
  * <ul>
- * <li><b>method</b> - Method for Redis. Currently allowed: smembers, zrevrangebyscore. (required)</li>
+ * <li><b>command</b> - Redis command. Currently allowed: smembers, zrevrangebyscore. (required)</li>
  * <li><b>key</b> - Key used to fetch data from Redis. (required)</li>
  * <li><b>operator</b> - Operator which connects terms taken from Redis. Allowed values are "AND" and "OR".
  * Default operator is OR. (optional)</li>
@@ -35,10 +34,10 @@ import redis.clients.jedis.Protocol;
  * <p>Examples of usage: <br>
  * <ul>
  * <li>
- *  <code>{!redis method=smembers key=some_key}field</code>
+ *  <code>{!redis command=smembers key=some_key}field</code>
  * </li>
  * <li>
- *  <code>{!redis method=zrevrangebyscore key=some_key min=1 max=1000}field</code>
+ *  <code>{!redis command=zrevrangebyscore key=some_key min=1 max=1000}field</code>
  * </li>
  * </ul>
  * <br><p>
@@ -53,7 +52,7 @@ import redis.clients.jedis.Protocol;
  */
 public class RedisQParserPlugin extends QParserPlugin {
 
-  static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
+  private static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
 
   public static final String NAME = "redis";
   public static final String HOST_FIELD = "host";
@@ -75,16 +74,6 @@ public class RedisQParserPlugin extends QParserPlugin {
     return new RedisQParser(qstr, localParams, params, req, jedisConnectorPool, retriesNumber);
   }
 
-  @VisibleForTesting
-  public void setJedisConnectorPool(JedisPool jedisConnectorPool) {
-    this.jedisConnectorPool = jedisConnectorPool;
-  }
-
-  @VisibleForTesting
-  public void setRetriesNumber(int retriesNumber) {
-    this.retriesNumber = retriesNumber;
-  }
-
   @Override
   public void init(NamedList args) {
     if (args != null) {
@@ -93,7 +82,6 @@ public class RedisQParserPlugin extends QParserPlugin {
       int timetout = Protocol.DEFAULT_TIMEOUT;
       String password = null;
 
-      SolrParams queryParserConfigurationParameters = SolrParams.toSolrParams(args);
       GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
 
       Object maxConnectionsConfiguration = args.get(MAX_CONNECTIONS_FIELD);
