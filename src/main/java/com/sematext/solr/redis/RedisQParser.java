@@ -37,7 +37,6 @@ public class RedisQParser extends QParser {
     commands = new HashMap<>();
     commands.put("smembers", new Smembers());
     commands.put("zrevrangebyscore", new Zrevrangebyscore());
-    commands.put("zrangebyscore", new Zrevrangebyscore());
   }
 
   private final JedisPool jedisPool;
@@ -150,17 +149,13 @@ public class RedisQParser extends QParser {
   private void fetchDataFromRedis(String redisCommand, String redisKey, int maxJedisRetries) {
     int retries = 0;
     final Command command = commands.get(redisCommand);
-    Map<String, Float> result;
 
     while (results == null && retries++ < maxJedisRetries + 1) {
       Jedis jedis = null;
       try {
         jedis = jedisPool.getResource();
-
-        result = command.execute(jedis, redisKey, localParams);
-
+        results = command.execute(jedis, redisKey, localParams);
         jedisPool.returnResource(jedis);
-        results = result;
       } catch (JedisException ex) {
         jedisPool.returnBrokenResource(jedis);
         log.debug("There was an error fetching data from redis. Retrying", ex);

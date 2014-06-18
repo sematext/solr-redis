@@ -20,14 +20,14 @@ import redis.clients.jedis.Protocol;
  * <p>
  * Allowed parameters for the RedisQParserPlugin are:
  * <ul>
- * <li><b>command</b> - Redis command. Currently allowed: smembers, zrangebyscore, zrevrangebyscore. (required)</li>
+ * <li><b>command</b> - Redis command. Currently allowed: smembers, zrevrangebyscore. (required)</li>
  * <li><b>key</b> - Key used to fetch data from Redis. (required)</li>
  * <li><b>operator</b> - Operator which connects terms taken from Redis. Allowed values are "AND" and "OR".
  * Default operator is OR. (optional)</li>
  * <li><b>useAnalyzer</b> - Turns on and off query time analyzer true/false (optinal - default is true)</li>
  * </ul>
  * <p>
- * ZRANGEBYSCORE and ZREVRANGEBYSCORE specific parameters: <br> <ul>
+ * ZREVRANGEBYSCORE specific parameters: <br> <ul>
  * <li><b>min</b> - Minimum value of range. (optional)</li>
  * <li><b>key</b> - Maximum value of range. (required)</li>
  * </ul>
