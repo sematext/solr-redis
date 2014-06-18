@@ -1,4 +1,9 @@
 language: java
+services:
+  - redis-server
 script: "mvn test verify -Dskip.integration.tests=false"
 jdk:
   - oraclejdk7
+cache:
+  directories:
+    - $HOME/.m2

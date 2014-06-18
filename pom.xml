@@ -36,6 +36,12 @@
             <email>otis@sematext.com</email>
             <organization>Sematext</organization>
         </developer>
+        <developer>
+            <id>lstrojny</id>
+            <name>Lars Strojny</name>
+            <email>lars.strojny@internations.org</email>
+            <organization>InterNations</organization>
+        </developer>
     </developers>
 
     <scm>
