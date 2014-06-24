@@ -17,38 +17,6 @@ import redis.clients.jedis.Protocol;
  * <p> RedisQParserPlugin initiates connection with Redis and pass the connection
  * object to RedisQParser which is responsible for fetching data and building a
  * query.
- * <p>
- * Allowed parameters for the RedisQParserPlugin are:
- * <ul>
- * <li><b>command</b> - Redis command. Currently allowed: smembers, zrevrangebyscore. (required)</li>
- * <li><b>key</b> - Key used to fetch data from Redis. (required)</li>
- * <li><b>operator</b> - Operator which connects terms taken from Redis. Allowed values are "AND" and "OR".
- * Default operator is OR. (optional)</li>
- * <li><b>useAnalyzer</b> - Turns on and off query time analyzer true/false (optinal - default is true)</li>
- * </ul>
- * <p>
- * ZREVRANGEBYSCORE specific parameters: <br> <ul>
- * <li><b>min</b> - Minimum value of range. (optional)</li>
- * <li><b>key</b> - Maximum value of range. (required)</li>
- * </ul>
- * <p>Examples of usage: <br>
- * <ul>
- * <li>
- *  <code>{!redis command=smembers key=some_key}field</code>
- * </li>
- * <li>
- *  <code>{!redis command=zrevrangebyscore key=some_key min=1 max=1000}field</code>
- * </li>
- * </ul>
- * <br><p>
- * You should configure that query parser plugin in solrconfig.xml first
- * <br><br><code>
- *   &lt;queryParser name="redis" class="com.sematext.solr.redis.RedisQParserPlugin"&gt;<br>
- *   &nbsp;&nbsp;&lt;str name="host"&gt;localhost&lt;/str&gt;<br>
- *   &nbsp;&nbsp;&lt;str name="maxConnections"&gt;30&lt;/str&gt;<br>
- *   &nbsp;&nbsp;&lt;str name="retries"&gt;2&lt;/str&gt;<br>
- *   &lt;/queryParser&gt;<br>
- * </code>
  */
 public class RedisQParserPlugin extends QParserPlugin {
 
