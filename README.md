@@ -72,23 +72,23 @@ SORT specific parameters:
  * **get\*** - Anything that starts with the prefix **get** is assumed to a redis SORT GET parameter
 
 Examples of usage:
- * `q=\*:\*&fq={!redis command=SMEMBERS key=some_key}field`
- * `q=\*:\*&fq={!redis command=SRANDMEMBER key=some_key count=2}field`
- * `q=\*:\*&fq={!redis command=SDIFF key=set0 key1=set1}field`
- * `q=\*:\*&fq={!redis command=SINTER key=set0 key1=set1}field`
- * `q=\*:\*&fq={!redis command=SUNION key=set0 key1=set1}field`
- * `q=\*:\*&fq={!redis command=HVALS key=some_key}field`
- * `q=\*:\*&fq={!redis command=HGET key=some_key field=f1}field`
- * `q=\*:\*&fq={!redis command=HMGET key=some_key field0=f1 field1=f2}field`
- * `q=\*:\*&fq={!redis command=HKEYS key=some_key}field`
- * `q=\*:\*&fq={!redis command=ZRANGEBYSCORE key=some_key min=1 max=1000}field`
- * `q=\*:\*&fq={!redis command=ZREVRANGEBYSCORE key=some_key max=213}field`
- * `q=\*:\*&fq={!redis command=LRANGE key=list_key min=1 max=-1}`
- * `q=\*:˜*&fq={!redis command=LINDEX key=list_key index=-1}`
- * `q=\*:\*&fq={!redis command=GET key=redis_key}`
- * `q=\*:\*&fq={!redis command=MGET key=key_one key1=key_two key2=key_three}`
- * `q=\*:\*&fq={!redis command=KEYS key=pattern}`
- * `q=\*:\*&fq={!redis command=SORT key=key_one algorithm=alpha offset=1 limit=100 by=weight_* get0=obj1_* get1=obj2_*}`
+ * `q=*:*&fq={!redis command=SMEMBERS key=some_key}field`
+ * `q=*:*&fq={!redis command=SRANDMEMBER key=some_key count=2}field`
+ * `q=*:*&fq={!redis command=SDIFF key=set0 key1=set1}field`
+ * `q=*:*&fq={!redis command=SINTER key=set0 key1=set1}field`
+ * `q=*:*&fq={!redis command=SUNION key=set0 key1=set1}field`
+ * `q=*:*&fq={!redis command=HVALS key=some_key}field`
+ * `q=*:*&fq={!redis command=HGET key=some_key field=f1}field`
+ * `q=*:*&fq={!redis command=HMGET key=some_key field0=f1 field1=f2}field`
+ * `q=*:*&fq={!redis command=HKEYS key=some_key}field`
+ * `q=*:*&fq={!redis command=ZRANGEBYSCORE key=some_key min=1 max=1000}field`
+ * `q=*:*&fq={!redis command=ZREVRANGEBYSCORE key=some_key max=213}field`
+ * `q=*:*&fq={!redis command=LRANGE key=list_key min=1 max=-1}`
+ * `q=*:*&fq={!redis command=LINDEX key=list_key index=-1}`
+ * `q=*:*&fq={!redis command=GET key=redis_key}`
+ * `q=*:*&fq={!redis command=MGET key=key_one key1=key_two key2=key_three}`
+ * `q=*:*&fq={!redis command=KEYS key=pattern}`
+ * `q=*:*&fq={!redis command=SORT key=key_one algorithm=alpha offset=1 limit=100 by=weight_* get0=obj1_* get1=obj2_*}`
 
 ### Allowed configuration parameter for RedisQParserPlugin (section in solrconfig.xml):
  * **host** - Host of the Redis server (can also be host:port)
