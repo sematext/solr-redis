@@ -4,16 +4,18 @@ import org.apache.solr.common.params.SolrParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
-import java.util.Arrays;
+
 import java.util.Map;
 
-public class GET implements Command {
-  private static final Logger log = LoggerFactory.getLogger(GET.class);
+public class MGet implements Command {
+  private static final Logger log = LoggerFactory.getLogger(MGet.class);
 
   @Override
   public Map<String, Float> execute(Jedis jedis, String key, SolrParams params) {
-    log.debug("Fetching GET from Redis for key: {}", key);
+    final String[] keys = ParamUtil.getStringByPrefix(params, "key");
 
-    return ResultUtil.stringIteratorToMap(Arrays.asList(jedis.get(key)));
+    log.debug("Fetching MGET from Redis for key: {}", keys);
+
+    return ResultUtil.stringIteratorToMap(jedis.mget(keys));
   }
 }

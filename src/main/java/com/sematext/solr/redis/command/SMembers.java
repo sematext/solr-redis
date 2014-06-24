@@ -6,13 +6,13 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import java.util.Map;
 
-public class HKEYS implements Command {
-  private static final Logger log = LoggerFactory.getLogger(HKEYS.class);
+public class SMembers implements Command {
+  private static final Logger log = LoggerFactory.getLogger(SMembers.class);
 
   @Override
   public Map<String, Float> execute(Jedis jedis, String key, SolrParams params) {
-    log.debug("Fetching HKEYS from Redis for key: {}", key);
+    log.debug("Fetching SMEMBERS from Redis for key: {}", key);
 
-    return ResultUtil.stringIteratorToMap(jedis.hkeys(key));
+    return ResultUtil.stringIteratorToMap(jedis.smembers(key));
   }
 }

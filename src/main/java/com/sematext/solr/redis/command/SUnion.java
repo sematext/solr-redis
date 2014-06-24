@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import java.util.Map;
 
-public class SUNION implements Command {
-  private static final Logger log = LoggerFactory.getLogger(SUNION.class);
+public class SUnion implements Command {
+  private static final Logger log = LoggerFactory.getLogger(SUnion.class);
 
   @Override
   public Map<String, Float> execute(Jedis jedis, String key, SolrParams params) {

@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import java.util.Map;
 
-public class LRANGE implements Command {
-  private static final Logger log = LoggerFactory.getLogger(LRANGE.class);
+public class LRange implements Command {
+  private static final Logger log = LoggerFactory.getLogger(LRange.class);
 
   @Override
   public Map<String, Float> execute(Jedis jedis, String key, SolrParams params) {

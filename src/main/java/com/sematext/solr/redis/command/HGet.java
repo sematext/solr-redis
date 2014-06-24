@@ -8,8 +8,8 @@ import redis.clients.jedis.Jedis;
 import java.util.Arrays;
 import java.util.Map;
 
-public class HGET implements Command {
-  private static final Logger log = LoggerFactory.getLogger(HGET.class);
+public class HGet implements Command {
+  private static final Logger log = LoggerFactory.getLogger(HGet.class);
 
   @Override
   public Map<String, Float> execute(Jedis jedis, String key, SolrParams params) {

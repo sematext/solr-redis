@@ -1,23 +1,23 @@
 package com.sematext.solr.redis;
 
 import com.sematext.solr.redis.command.Command;
-import com.sematext.solr.redis.command.GET;
-import com.sematext.solr.redis.command.HGET;
-import com.sematext.solr.redis.command.HKEYS;
-import com.sematext.solr.redis.command.HMGET;
-import com.sematext.solr.redis.command.HVALS;
-import com.sematext.solr.redis.command.KEYS;
-import com.sematext.solr.redis.command.LINDEX;
-import com.sematext.solr.redis.command.LRANGE;
-import com.sematext.solr.redis.command.MGET;
-import com.sematext.solr.redis.command.SDIFF;
-import com.sematext.solr.redis.command.SINTER;
-import com.sematext.solr.redis.command.SMEMBERS;
-import com.sematext.solr.redis.command.SORT;
-import com.sematext.solr.redis.command.SRANDMEMBER;
-import com.sematext.solr.redis.command.SUNION;
-import com.sematext.solr.redis.command.ZRANGEBYSCORE;
-import com.sematext.solr.redis.command.ZREVRANGEBYSCORE;
+import com.sematext.solr.redis.command.Get;
+import com.sematext.solr.redis.command.HGet;
+import com.sematext.solr.redis.command.HKeys;
+import com.sematext.solr.redis.command.HMGet;
+import com.sematext.solr.redis.command.HVals;
+import com.sematext.solr.redis.command.Keys;
+import com.sematext.solr.redis.command.LIndex;
+import com.sematext.solr.redis.command.LRange;
+import com.sematext.solr.redis.command.MGet;
+import com.sematext.solr.redis.command.SDiff;
+import com.sematext.solr.redis.command.SInter;
+import com.sematext.solr.redis.command.SMembers;
+import com.sematext.solr.redis.command.Sort;
+import com.sematext.solr.redis.command.SRandomMember;
+import com.sematext.solr.redis.command.SUnion;
+import com.sematext.solr.redis.command.ZRangeByScore;
+import com.sematext.solr.redis.command.ZRevrangeByScore;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
@@ -49,28 +49,28 @@ public class RedisQParser extends QParser {
   private static final Map<String, Command> commands;
   static {
     commands = new HashMap<>();
-    commands.put("SDIFF", new SDIFF());
-    commands.put("SINTER", new SINTER());
-    commands.put("SMEMBERS", new SMEMBERS());
-    commands.put("SRANDMEMBER", new SRANDMEMBER());
-    commands.put("SUNION", new SUNION());
+    commands.put("SDIFF", new SDiff());
+    commands.put("SINTER", new SInter());
+    commands.put("SMEMBERS", new SMembers());
+    commands.put("SRANDMEMBER", new SRandomMember());
+    commands.put("SUNION", new SUnion());
 
-    commands.put("ZRANGEBYSCORE", new ZRANGEBYSCORE());
-    commands.put("ZREVRANGEBYSCORE", new ZREVRANGEBYSCORE());
+    commands.put("ZRANGEBYSCORE", new ZRangeByScore());
+    commands.put("ZREVRANGEBYSCORE", new ZRevrangeByScore());
 
-    commands.put("HGET", new HGET());
-    commands.put("HKEYS", new HKEYS());
-    commands.put("HMGET", new HMGET());
-    commands.put("HVALS", new HVALS());
+    commands.put("HGET", new HGet());
+    commands.put("HKEYS", new HKeys());
+    commands.put("HMGET", new HMGet());
+    commands.put("HVALS", new HVals());
 
-    commands.put("LRANGE", new LRANGE());
-    commands.put("LINDEX", new LINDEX());
+    commands.put("LRANGE", new LRange());
+    commands.put("LINDEX", new LIndex());
 
-    commands.put("GET", new GET());
-    commands.put("MGET", new MGET());
-    commands.put("KEYS", new KEYS());
+    commands.put("GET", new Get());
+    commands.put("MGET", new MGet());
+    commands.put("KEYS", new Keys());
 
-    commands.put("SORT", new SORT());
+    commands.put("SORT", new Sort());
   }
 
   private final JedisPool jedisPool;

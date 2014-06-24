@@ -5,7 +5,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.SortingParams;
 import java.util.Map;
 
-public class SORT implements Command {
+public class Sort implements Command {
   @Override
   public Map<String, Float> execute(Jedis jedis, String key, SolrParams params) {
     final String algorithm = ParamUtil.getStringByName(params, "algorithm", null);
