@@ -16,6 +16,6 @@ public class ZRangeByScore implements Command {
 
     log.debug("Fetching ZRANGEBYSCORE from Redis for key: {} ({}, {})", key, min, max);
 
-    return Command.ResultUtil.tupleIteratorToMap(jedis.zrangeByScoreWithScores(key, max, min));
+    return Command.ResultUtil.tupleIteratorToMap(jedis.zrangeByScoreWithScores(key, min, max));
   }
 }

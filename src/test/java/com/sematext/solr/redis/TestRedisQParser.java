@@ -1080,7 +1080,7 @@ public class TestRedisQParser {
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     Query query = redisQParser.parse();
-    verify(jedisMock).zrangeByScoreWithScores("simpleKey", "+inf", "-inf");
+    verify(jedisMock).zrangeByScoreWithScores("simpleKey", "-inf", "+inf");
     Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
@@ -1100,7 +1100,7 @@ public class TestRedisQParser {
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     Query query = redisQParser.parse();
-    verify(jedisMock).zrangeByScoreWithScores("simpleKey", "100", "1");
+    verify(jedisMock).zrangeByScoreWithScores("simpleKey", "1", "100");
     Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
