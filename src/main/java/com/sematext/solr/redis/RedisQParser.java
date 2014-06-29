@@ -13,9 +13,9 @@ import com.sematext.solr.redis.command.MGet;
 import com.sematext.solr.redis.command.SDiff;
 import com.sematext.solr.redis.command.SInter;
 import com.sematext.solr.redis.command.SMembers;
-import com.sematext.solr.redis.command.Sort;
-import com.sematext.solr.redis.command.SRandomMember;
+import com.sematext.solr.redis.command.SRandMember;
 import com.sematext.solr.redis.command.SUnion;
+import com.sematext.solr.redis.command.Sort;
 import com.sematext.solr.redis.command.ZRangeByScore;
 import com.sematext.solr.redis.command.ZRevrangeByScore;
 import org.apache.lucene.analysis.TokenStream;
@@ -43,16 +43,16 @@ import java.util.Map;
 /**
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
  */
-public class RedisQParser extends QParser {
-  private static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
+final class RedisQParser extends QParser {
+  private static final Logger log = LoggerFactory.getLogger(RedisQParser.class);
 
-  private static final Map<String, Command> commands;
+  private static final Map<String, Command<?>> commands;
   static {
     commands = new HashMap<>();
     commands.put("SDIFF", new SDiff());
     commands.put("SINTER", new SInter());
     commands.put("SMEMBERS", new SMembers());
-    commands.put("SRANDMEMBER", new SRandomMember());
+    commands.put("SRANDMEMBER", new SRandMember());
     commands.put("SUNION", new SUnion());
 
     commands.put("ZRANGEBYSCORE", new ZRangeByScore());
@@ -74,25 +74,26 @@ public class RedisQParser extends QParser {
   }
 
   private final JedisPool jedisPool;
-  private Map<String, Float> results = null;
+  private Map<String, Float> results;
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
   private final String redisCommand;
   private final String redisKey;
   private final boolean useQueryTimeAnalyzer;
   private final int maxJedisRetries;
 
-  RedisQParser(String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req, JedisPool jedisPool) {
+  RedisQParser(final String qstr, final SolrParams localParams, final SolrParams params, final SolrQueryRequest req,
+    final JedisPool jedisPool) {
     this(qstr, localParams, params, req, jedisPool, 0);
   }
 
-  RedisQParser (String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req,
-          JedisPool jedisPool, int maxJedisRetries) {
+  RedisQParser(final String qstr, final SolrParams localParams, final SolrParams params, final SolrQueryRequest req,
+          final JedisPool jedisPool, final int maxJedisRetries) {
     super(qstr, localParams, params, req);
     this.jedisPool = jedisPool;
 
     redisCommand = localParams.get("command") == null ? null : localParams.get("command").toUpperCase();
     redisKey = localParams.get("key");
-    String operatorString = localParams.get("operator");
+    final String operatorString = localParams.get("operator");
 
     if (redisCommand == null) {
       log.error("No command argument passed to RedisQParser.");
@@ -107,11 +108,7 @@ public class RedisQParser extends QParser {
       throw new IllegalArgumentException("No key argument passed to RedisQParser");
     }
 
-    if (operatorString != null && "AND".equalsIgnoreCase(operatorString)) {
-      operator = BooleanClause.Occur.MUST;
-    } else {
-      operator = BooleanClause.Occur.SHOULD;
-    }
+    operator = "AND".equalsIgnoreCase(operatorString) ? BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
 
     useQueryTimeAnalyzer = localParams.getBool("useAnalyzer", true);
 
@@ -129,7 +126,7 @@ public class RedisQParser extends QParser {
     if (results != null) {
       log.debug("Preparing a query for {} redis objects for field: {}", results.size(), fieldName);
 
-      for (Map.Entry<String, Float> entry : results.entrySet()) {
+      for (final Map.Entry<String, Float> entry : results.entrySet()) {
         try {
           final TokenStream tokenStream;
           final String termString = entry.getKey();
@@ -166,7 +163,7 @@ public class RedisQParser extends QParser {
             booleanQuery.add(termQuery, this.operator);
             ++booleanClausesTotal;
           }
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
           log.error("Error occurred during processing token stream.", ex);
         }
       }
@@ -177,7 +174,7 @@ public class RedisQParser extends QParser {
     return booleanQuery;
   }
 
-  private void fetchDataFromRedis(String redisCommand, String redisKey, int maxJedisRetries) {
+  private void fetchDataFromRedis(final String redisCommand, final String redisKey, final int maxJedisRetries) {
     int retries = 0;
     final Command command = commands.get(redisCommand);
 
@@ -187,7 +184,7 @@ public class RedisQParser extends QParser {
         jedis = jedisPool.getResource();
         results = command.execute(jedis, redisKey, localParams);
         jedisPool.returnResource(jedis);
-      } catch (JedisException ex) {
+      } catch (final JedisException ex) {
         jedisPool.returnBrokenResource(jedis);
         log.debug("There was an error fetching data from redis. Retrying", ex);
         if (retries >= maxJedisRetries + 1) {
