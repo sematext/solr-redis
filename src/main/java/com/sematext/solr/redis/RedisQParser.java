@@ -16,7 +16,9 @@ import com.sematext.solr.redis.command.SMembers;
 import com.sematext.solr.redis.command.SRandMember;
 import com.sematext.solr.redis.command.SUnion;
 import com.sematext.solr.redis.command.Sort;
+import com.sematext.solr.redis.command.ZRange;
 import com.sematext.solr.redis.command.ZRangeByScore;
+import com.sematext.solr.redis.command.ZRevRange;
 import com.sematext.solr.redis.command.ZRevrangeByScore;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -55,6 +57,8 @@ final class RedisQParser extends QParser {
     commands.put("SRANDMEMBER", new SRandMember());
     commands.put("SUNION", new SUnion());
 
+    commands.put("ZRANGE", new ZRange());
+    commands.put("ZREVRANGE", new ZRevRange());
     commands.put("ZRANGEBYSCORE", new ZRangeByScore());
     commands.put("ZREVRANGEBYSCORE", new ZRevrangeByScore());
 
