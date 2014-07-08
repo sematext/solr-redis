@@ -10,6 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import java.net.URLDecoder;
+import java.util.concurrent.TimeUnit;
 
 public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
@@ -844,6 +845,27 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     assertQ(req(params), "*[count(//doc)=4]", "//result/doc[1]/str[@name='id'][.='3']",
         "//result/doc[2]/str[@name='id'][.='1']", "//result/doc[3]/str[@name='id'][.='4']",
         "//result/doc[4]/str[@name='id'][.='2']");
+  }
+
+  @Test
+  public void shouldRetryOnConnectionProblem() {
+    final String[] doc = {"id", "1", "string_field", "test"};
+    assertU(adoc(doc));
+    assertU(commit());
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis command=smembers key=test_set}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+
+    jedis.configSet("timeout", "1");
+    try {
+      TimeUnit.SECONDS.sleep(2);
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
   }
 
   /**
