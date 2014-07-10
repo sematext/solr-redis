@@ -47,13 +47,13 @@ public class RedisQParserPlugin extends QParserPlugin {
   @Override
   public void init(final NamedList args) {
     final GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-    poolConfig.setMaxTotal(getInteger(args, MAX_CONNECTIONS_FIELD, DEFAULT_MAX_CONNECTIONS));
+    poolConfig.setMaxTotal(getInt(args, MAX_CONNECTIONS_FIELD, DEFAULT_MAX_CONNECTIONS));
 
     final String host = getString(args, HOST_FIELD, HostAndPort.LOCALHOST_STR);
-    final Integer timeout = getInteger(args, TIMEOUT_FIELD, Protocol.DEFAULT_TIMEOUT);
+    final int timeout = getInt(args, TIMEOUT_FIELD, Protocol.DEFAULT_TIMEOUT);
     final String password = getString(args, PASSWORD_FIELD, null);
-    final Integer database = getInteger(args, DATABASE_FIELD, Protocol.DEFAULT_DATABASE);
-    retries = getInteger(args, RETRIES_FIELD, DEFAULT_RETRIES);
+    final int database = getInt(args, DATABASE_FIELD, Protocol.DEFAULT_DATABASE);
+    retries = getInt(args, RETRIES_FIELD, DEFAULT_RETRIES);
 
     log.info("Initializing RedisQParserPlugin with host: " + host);
     final String[] hostAndPort = host.split(":");
@@ -72,7 +72,7 @@ public class RedisQParserPlugin extends QParserPlugin {
     return new JedisPool(poolConfig, host, port, timeout, password, database);
   }
 
-  private Integer getInteger(final NamedList args, final String key, final Integer def) {
+  private int getInt(final NamedList args, final String key, final int def) {
     final Object value = args != null ? args.get(key) : null;
     return value instanceof String ? Integer.parseInt((String) value) : def;
   }

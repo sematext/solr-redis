@@ -10,7 +10,7 @@ public final class SDiff implements Command<MultiKeyCommands> {
   private static final Logger log = LoggerFactory.getLogger(SDiff.class);
 
   @Override
-  public Map<String, Float> execute(final MultiKeyCommands client, final String key, final SolrParams params) {
+  public Map<String, Float> execute(final MultiKeyCommands client, final SolrParams params) {
     final String[] keys = ParamUtil.getStringByPrefix(params, "key");
 
     log.debug("Fetching SDIFF from Redis for keys: {}", keys);

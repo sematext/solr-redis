@@ -10,9 +10,10 @@ public final class ZRangeByScore implements Command<JedisCommands> {
   private static final Logger log = LoggerFactory.getLogger(ZRangeByScore.class);
 
   @Override
-  public Map<String, Float> execute(final JedisCommands client, final String key, final SolrParams params) {
-    final String min = ParamUtil.getStringByName(params, "min", "-inf");
-    final String max = ParamUtil.getStringByName(params, "max", "+inf");
+  public Map<String, Float> execute(final JedisCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
+    final String min = ParamUtil.tryGetStringByName(params, "min", "-inf");
+    final String max = ParamUtil.tryGetStringByName(params, "max", "+inf");
 
     log.debug("Fetching ZRANGEBYSCORE from Redis for key: {} ({}, {})", key, min, max);
 

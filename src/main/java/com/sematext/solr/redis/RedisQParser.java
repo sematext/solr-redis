@@ -1,6 +1,8 @@
 package com.sematext.solr.redis;
 
 import com.sematext.solr.redis.command.Command;
+import com.sematext.solr.redis.command.Eval;
+import com.sematext.solr.redis.command.EvalSha;
 import com.sematext.solr.redis.command.Get;
 import com.sematext.solr.redis.command.HGet;
 import com.sematext.solr.redis.command.HKeys;
@@ -75,13 +77,15 @@ final class RedisQParser extends QParser {
     commands.put("KEYS", new Keys());
 
     commands.put("SORT", new Sort());
+
+    commands.put("EVAL", new Eval());
+    commands.put("EVALSHA", new EvalSha());
   }
 
   private final JedisPool jedisPool;
   private Map<String, Float> results;
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
   private final String redisCommand;
-  private final String redisKey;
   private final boolean useQueryTimeAnalyzer;
   private final int maxJedisRetries;
 
@@ -96,7 +100,6 @@ final class RedisQParser extends QParser {
     this.jedisPool = jedisPool;
 
     redisCommand = localParams.get("command") == null ? null : localParams.get("command").toUpperCase();
-    redisKey = localParams.get("key");
     final String operatorString = localParams.get("operator");
 
     if (redisCommand == null) {
@@ -105,11 +108,6 @@ final class RedisQParser extends QParser {
     } else if (!commands.containsKey(redisCommand)) {
       log.error("Wrong Redis command: {}", redisCommand);
       throw new IllegalArgumentException(String.format("Wrong Redis command '%s'.", redisCommand));
-    }
-
-    if (redisKey == null || redisKey.isEmpty()) {
-      log.error("No key argument passed to RedisQParser");
-      throw new IllegalArgumentException("No key argument passed to RedisQParser");
     }
 
     operator = "AND".equalsIgnoreCase(operatorString) ? BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
@@ -125,7 +123,7 @@ final class RedisQParser extends QParser {
     final BooleanQuery booleanQuery = new BooleanQuery(true);
     int booleanClausesTotal = 0;
 
-    fetchDataFromRedis(redisCommand, redisKey, maxJedisRetries);
+    fetchDataFromRedis(redisCommand, maxJedisRetries);
 
     if (results != null) {
       log.debug("Preparing a query for {} redis objects for field: {}", results.size(), fieldName);
@@ -178,20 +176,20 @@ final class RedisQParser extends QParser {
     return booleanQuery;
   }
 
-  private void fetchDataFromRedis(final String redisCommand, final String redisKey, final int maxJedisRetries) {
+  private void fetchDataFromRedis(final String redisCommand, final int maxRetries) {
     int retries = 0;
     final Command command = commands.get(redisCommand);
 
-    while (results == null && retries++ < maxJedisRetries + 1) {
+    while (results == null && retries++ < maxRetries + 1) {
       Jedis jedis = null;
       try {
         jedis = jedisPool.getResource();
-        results = command.execute(jedis, redisKey, localParams);
+        results = command.execute(jedis, localParams);
         jedisPool.returnResource(jedis);
       } catch (final JedisException ex) {
         jedisPool.returnBrokenResource(jedis);
         log.debug("There was an error fetching data from redis. Retrying", ex);
-        if (retries >= maxJedisRetries + 1) {
+        if (retries >= maxRetries + 1) {
           throw ex;
         }
       }

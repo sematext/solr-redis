@@ -10,7 +10,9 @@ public final class HVals implements Command<JedisCommands> {
   private static final Logger log = LoggerFactory.getLogger(HVals.class);
 
   @Override
-  public Map<String, Float> execute(final JedisCommands client, final String key, final SolrParams params) {
+  public Map<String, Float> execute(final JedisCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
+
     log.debug("Fetching HVALS from Redis for key: {}", key);
 
     return ResultUtil.stringIteratorToMap(client.hvals(key));

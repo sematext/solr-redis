@@ -10,7 +10,8 @@ public final class HMGet implements Command<JedisCommands> {
   private static final Logger log = LoggerFactory.getLogger(HMGet.class);
 
   @Override
-  public Map<String, Float> execute(final JedisCommands client, final String key, final SolrParams params) {
+  public Map<String, Float> execute(final JedisCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
     final String[] fields = ParamUtil.getStringByPrefix(params, "field");
 
     log.debug("Fetching HMGET from Redis for key: {} ({})", key, fields);

@@ -11,8 +11,9 @@ public final class SRandMember implements Command<JedisCommands> {
   private static final Logger log = LoggerFactory.getLogger(SRandMember.class);
 
   @Override
-  public Map<String, Float> execute(final JedisCommands client, final String key, final SolrParams params) {
-    final Integer count = ParamUtil.getIntByName(params, "count", 1);
+  public Map<String, Float> execute(final JedisCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
+    final int count = ParamUtil.tryGetIntByName(params, "count", 1);
 
     log.debug("Fetching SRANDMEMBER from Redis for key: {} ({})", key, count);
 

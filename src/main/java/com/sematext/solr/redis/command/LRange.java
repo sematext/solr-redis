@@ -10,9 +10,10 @@ public final class LRange implements Command<JedisCommands> {
   private static final Logger log = LoggerFactory.getLogger(LRange.class);
 
   @Override
-  public Map<String, Float> execute(final JedisCommands client, final String key, final SolrParams params) {
-    final Integer min = ParamUtil.getIntByName(params, "min", 0);
-    final Integer max = ParamUtil.getIntByName(params, "max", -1);
+  public Map<String, Float> execute(final JedisCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
+    final int min = ParamUtil.tryGetIntByName(params, "min", 0);
+    final int max = ParamUtil.tryGetIntByName(params, "max", -1);
 
     log.debug("Fetching LRANGE from Redis for key: {} ({}, {})", key, min, max);
 

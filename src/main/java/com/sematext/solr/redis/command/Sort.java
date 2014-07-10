@@ -11,12 +11,13 @@ public final class Sort implements Command<JedisCommands> {
   private static final Logger log = LoggerFactory.getLogger(Sort.class);
 
   @Override
-  public Map<String, Float> execute(final JedisCommands client, final String key, final SolrParams params) {
-    final String algorithm = ParamUtil.getStringByName(params, "algorithm", null);
-    final String order = ParamUtil.getStringByName(params, "order", null);
-    final Integer limit = ParamUtil.getIntByName(params, "limit", null);
-    final Integer offset = ParamUtil.getIntByName(params, "offset", null);
-    final String byValue = ParamUtil.getStringByName(params, "by", null);
+  public Map<String, Float> execute(final JedisCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
+    final String algorithm = ParamUtil.tryGetStringByName(params, "algorithm", null);
+    final String order = ParamUtil.tryGetStringByName(params, "order", null);
+    final Integer limit = ParamUtil.tryGetIntByName(params, "limit", null);
+    final Integer offset = ParamUtil.tryGetIntByName(params, "offset", null);
+    final String byValue = ParamUtil.tryGetStringByName(params, "by", null);
     final String[] get = ParamUtil.getStringByPrefix(params, "get");
     final SortingParams sortingParams = new SortingParams();
 

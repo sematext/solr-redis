@@ -11,7 +11,9 @@ public final class Get implements Command<JedisCommands> {
   private static final Logger log = LoggerFactory.getLogger(Get.class);
 
   @Override
-  public Map<String, Float> execute(final JedisCommands client, final String key, final SolrParams params) {
+  public Map<String, Float> execute(final JedisCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
+
     log.debug("Fetching GET from Redis for key: {}", key);
 
     return ResultUtil.stringIteratorToMap(Arrays.asList(client.get(key)));

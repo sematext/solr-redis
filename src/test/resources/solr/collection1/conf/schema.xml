@@ -16,10 +16,10 @@
  limitations under the License.
 -->
 
-<!--  
+<!--
  This is the Solr schema file. This file should be named "schema.xml" and
  should be in the conf directory under the solr home
- (i.e. ./solr/conf/schema.xml by default) 
+ (i.e. ./solr/conf/schema.xml by default)
  or located where the classloader for the Solr webapp can find it.
 
  This example schema is the recommended starting point for users.
@@ -30,19 +30,23 @@
 -->
 
 <schema name="example" version="1.1">
-  
-   <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
 
-   <field name="_version_" type="string"/>
-   <field name="id" type="string" required="true" />
-   <field name="string_field" type="string" />
+  <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+  <fieldType name="double" class="solr.TrieDoubleField" sortMissingLast="true" omitNorms="true"/>
+  <fieldType name="int" class="solr.TrieIntField" sortMissingLast="true" omitNorms="true"/>
 
- <!-- Field to use to determine and enforce document uniqueness. 
+  <field name="_version_" type="string"/>
+  <field name="id" type="string" required="true"/>
+  <field name="string_field" type="string"/>
+  <field name="double_field" type="double"/>
+  <field name="int_field" type="int"/>
+
+  <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field
    -->
- <uniqueKey>id</uniqueKey>
+  <uniqueKey>id</uniqueKey>
 
- <!-- field for the QueryParser to use when an explicit fieldname is absent -->
- <defaultSearchField>string_field</defaultSearchField>
+  <!-- field for the QueryParser to use when an explicit fieldname is absent -->
+  <defaultSearchField>string_field</defaultSearchField>
 
 </schema>

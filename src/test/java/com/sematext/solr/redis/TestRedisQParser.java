@@ -68,9 +68,10 @@ public class TestRedisQParser {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void shouldThrowExceptionOnMissingKey() {
+  public void shouldThrowExceptionOnMissingKey() throws SyntaxError {
     when(localParamsMock.get("command")).thenReturn("smembers");
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    redisQParser.parse();
   }
 
   @Test
@@ -1172,6 +1173,30 @@ public class TestRedisQParser {
     final Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(2, terms.size());
+  }
+
+  @Test
+  public void shouldAddTermsFromRedisOnEval() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("eval");
+    when(localParamsMock.get("script")).thenReturn("return 1;");
+    when(localParamsMock.get("key")).thenReturn("k");
+    when(localParamsMock.get("arg")).thenReturn("a");
+    when(localParamsMock.getParameterNamesIterator())
+        .thenReturn(
+            Arrays.asList("command", "script", "key", "arg").iterator(),
+            Arrays.asList("command", "script", "key", "arg").iterator());
+
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.eval(anyString(), anyInt(), (String) anyVararg())).thenReturn(1);
+
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).eval("return 1;", 1, "k", "a");
+    final Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(1, terms.size());
   }
 
   @Test
