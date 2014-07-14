@@ -1031,13 +1031,84 @@ public class TestRedisQParser {
   }
 
   @Test
+  public void shouldAddTermsFromRedisOnZrevrangeCommandWithDefaultParams() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("zrevrange");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.zrevrangeWithScores(anyString(), anyLong(), anyLong()))
+        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).zrevrangeWithScores("simpleKey", 0, -1);
+    final Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(2, terms.size());
+  }
+
+  @Test
+  public void shouldAddTermsFromRedisOnZrevrangeCommandWithCustomRange() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("zrevrange");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("range_start")).thenReturn("1");
+    when(localParamsMock.get("range_end")).thenReturn("100");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.zrevrangeWithScores(anyString(), anyLong(), anyLong()))
+        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).zrevrangeWithScores("simpleKey", 1, 100);
+    final Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(2, terms.size());
+  }
+
+  @Test
+  public void shouldAddTermsFromRedisOnZrangeCommandWithDefaultParams() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("zrange");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.zrangeWithScores(anyString(), anyLong(), anyLong()))
+        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).zrangeWithScores("simpleKey", 0, -1);
+    final Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(2, terms.size());
+  }
+
+  @Test
+  public void shouldAddTermsFromRedisOnZrangeCommandWithCustomRange() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("zrange");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("range_start")).thenReturn("1");
+    when(localParamsMock.get("range_end")).thenReturn("100");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.zrangeWithScores(anyString(), anyLong(), anyLong()))
+        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).zrangeWithScores("simpleKey", 1, 100);
+    final Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(2, terms.size());
+  }
+
+  @Test
   public void shouldAddTermsFromRedisOnZrevrangebyscoreCommandWithDefaultParams() throws SyntaxError, IOException {
     when(localParamsMock.get("command")).thenReturn("zrevrangebyscore");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.zrevrangeByScoreWithScores(anyString(), anyString(), anyString())).
-            thenReturn(new HashSet<>(Arrays.asList(
-                    new Tuple("123", (double)1.0f), new Tuple("321", (double)1.0f))));
+    when(jedisMock.zrevrangeByScoreWithScores(anyString(), anyString(), anyString()))
+        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
@@ -1055,9 +1126,8 @@ public class TestRedisQParser {
     when(localParamsMock.get("min")).thenReturn("1");
     when(localParamsMock.get("max")).thenReturn("100");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.zrevrangeByScoreWithScores(anyString(), anyString(), anyString())).
-            thenReturn(new HashSet<>(Arrays.asList(
-                new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+    when(jedisMock.zrevrangeByScoreWithScores(anyString(), anyString(), anyString()))
+        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
@@ -1073,9 +1143,8 @@ public class TestRedisQParser {
     when(localParamsMock.get("command")).thenReturn("zrangebyscore");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.zrangeByScoreWithScores(anyString(), anyString(), anyString())).
-        thenReturn(new HashSet<>(Arrays.asList(
-            new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+    when(jedisMock.zrangeByScoreWithScores(anyString(), anyString(), anyString()))
+        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
@@ -1093,9 +1162,8 @@ public class TestRedisQParser {
     when(localParamsMock.get("min")).thenReturn("1");
     when(localParamsMock.get("max")).thenReturn("100");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.zrangeByScoreWithScores(anyString(), anyString(), anyString())).
-        thenReturn(new HashSet<>(Arrays.asList(
-            new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+    when(jedisMock.zrangeByScoreWithScores(anyString(), anyString(), anyString()))
+        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);

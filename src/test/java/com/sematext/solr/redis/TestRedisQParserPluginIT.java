@@ -605,7 +605,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
   }
 
   @Test
-  public void shouldOrderDocumentsByScoreZrevrange() {
+  public void shouldOrderDocumentsByScoreZrevrangebyscore() {
     final String[] doc1 = {"id", "1", "string_field", "member1"};
     final String[] doc2 = {"id", "2", "string_field", "member2"};
     final String[] doc3 = {"id", "3", "string_field", "member3"};
@@ -647,6 +647,90 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     params.add("q", "*:*");
     params.add("fq", "{!redis command=zrevrangebyscore key=test_set min='-inf' max=1}string_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+  }
+
+  @Test
+  public void shouldFindTwoDocumentsOnZrevrange() {
+    final String[] doc1 = {"id", "1", "string_field", "member1"};
+    final String[] doc2 = {"id", "2", "string_field", "member2"};
+    final String[] doc3 = {"id", "3", "string_field", "member3"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(commit());
+
+    jedis.flushAll();
+
+    jedis.zadd("test_set", 1, "member1");
+    jedis.zadd("test_set", 2, "member2");
+    jedis.zadd("test_set", 3, "member3");
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "{!redis command=zrevrange key=test_set range_start=1 range_end=2 boost=10}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='2']");
+  }
+
+  @Test
+  public void shouldOrderDocumentsByScoreZrevrange() {
+    final String[] doc1 = {"id", "1", "string_field", "member1"};
+    final String[] doc2 = {"id", "2", "string_field", "member2"};
+    final String[] doc3 = {"id", "3", "string_field", "member3"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(commit());
+
+    jedis.zadd("test_set2", 3, "member3");
+    jedis.zadd("test_set2", 2, "member1");
+    jedis.zadd("test_set2", 1, "member2");
+    jedis.zadd("test_set2", 0, "member4");
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "{!redis command=zrevrange key=test_set2}string_field");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='3']",
+        "//result/doc[2]/str[@name='id'][.='1']", "//result/doc[3]/str[@name='id'][.='2']");
+  }
+
+  @Test
+  public void shouldFindTwoDocumentsOnZrange() {
+    final String[] doc1 = {"id", "1", "string_field", "member1"};
+    final String[] doc2 = {"id", "2", "string_field", "member2"};
+    final String[] doc3 = {"id", "3", "string_field", "member3"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(commit());
+
+    jedis.flushAll();
+
+    jedis.zadd("test_set", 1, "member1");
+    jedis.zadd("test_set", 2, "member2");
+    jedis.zadd("test_set", 3, "member3");
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "{!redis command=zrange key=test_set range_start=1 range_end=2}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='3']");
+  }
+
+  @Test
+  public void shouldOrderDocumentsByScoreZrange() {
+    final String[] doc1 = {"id", "1", "string_field", "member1"};
+    final String[] doc2 = {"id", "2", "string_field", "member2"};
+    final String[] doc3 = {"id", "3", "string_field", "member3"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(commit());
+
+    jedis.zadd("test_set2", 3, "member3");
+    jedis.zadd("test_set2", 2, "member1");
+    jedis.zadd("test_set2", 1, "member2");
+    jedis.zadd("test_set2", 0, "member4");
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "{!redis command=zrange key=test_set2}string_field");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='3']",
+        "//result/doc[2]/str[@name='id'][.='1']", "//result/doc[3]/str[@name='id'][.='2']");
   }
 
   @Test
@@ -871,7 +955,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
   /**
    * Utility to print the result of a query
    */
-  private static void debugQuery(final SolrParams params) {
+  private static void debugQueryParams(final SolrParams params) {
     try {
       final SolrQueryRequest req = req(params);
       System.out.println("REQUEST: " + URLDecoder.decode(req.getParamString(), "UTF-8"));

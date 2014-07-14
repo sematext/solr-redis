@@ -32,7 +32,7 @@ Configure the query parser plugin in `solrconfig.xml`. Add the following to the 
 
 ### Allowed parameters for the RedisQParserPlugin:
 
- * **command** - Redis command. Currently allowed: `SMEMBERS`, `SRANDMEMBER`, `SDIFF`, `SINTER`, `SUNION` `ZRANGEBYSCORE`, `ZREVRANGEBYSCORE`, `HKEYS`, `HMGET`, `HVALS`, `LRANGE`, `LINDEX`, `GET`, `MGET`, `KEYS`, `SORT` (required)
+ * **command** - Redis command. Currently allowed: `SMEMBERS`, `SRANDMEMBER`, `SDIFF`, `SINTER`, `SUNION`, `ZRANGE`, `ZREVRANGE`, `ZRANGEBYSCORE`, `ZREVRANGEBYSCORE`, `HKEYS`, `HMGET`, `HVALS`, `LRANGE`, `LINDEX`, `GET`, `MGET`, `KEYS`, `SORT` (required)
  * **key** - Key used to fetch data from Redis (required)
  * **operator** - Operator which connects terms taken from Redis. Allowed values are AND/OR (optional - default is OR)
  * **useAnalyzer** - Turns on and off query time analyzer true/false (optional - default is true)
@@ -46,7 +46,11 @@ SDIFF, SINTER and SUNION specific parameters;
 ZRANGEBYSCORE and ZREVRANGEBYSCORE specific parameters:
  * **min** - Minimal value of range (optional, default `-inf`)
  * **max** - Maximal value of range (optional, default `+inf`)
- 
+
+ZRANGE and ZREVRANGE specific parameters:
+ * **range_start** - Start value of the range (optional, default `0`)
+ * **range_end** - End value of the range (optional, default `-1`)
+
 HGET specific parameters:
  * **field** - Field name of the hash (required)
 
@@ -81,6 +85,8 @@ Examples of usage:
  * `q=*:*&fq={!redis command=HGET key=some_key field=f1}field`
  * `q=*:*&fq={!redis command=HMGET key=some_key field0=f1 field1=f2}field`
  * `q=*:*&fq={!redis command=HKEYS key=some_key}field`
+ * `q=*:*&fq={!redis command=ZRANGE key=some_key range_start=1 range_end=1000}field`
+ * `q=*:*&fq={!redis command=ZREVRANGE key=some_key range_start=1 range_end=1000}field`
  * `q=*:*&fq={!redis command=ZRANGEBYSCORE key=some_key min=1 max=1000}field`
  * `q=*:*&fq={!redis command=ZREVRANGEBYSCORE key=some_key max=213}field`
  * `q=*:*&fq={!redis command=LRANGE key=list_key min=1 max=-1}`
