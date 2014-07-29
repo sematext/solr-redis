@@ -9,7 +9,15 @@ final class ParamUtil {
     super();
   }
 
-  static Integer getIntByName(final SolrParams params, final String param, final Integer defaultValue) {
+  static int assertGetIntByName(final SolrParams params, final String param) {
+    final int value = tryGetIntByName(params, param, null);
+
+    throwIfNull(param, value);
+
+    return value;
+  }
+
+  static Integer tryGetIntByName(final SolrParams params, final String param, final Integer defaultValue) {
     final String value = params.get(param);
     if (isEmpty(value)) {
       return defaultValue;
@@ -22,13 +30,38 @@ final class ParamUtil {
     }
   }
 
-  static String getStringByName(final SolrParams params, final String param, final String defaultValue) {
+  static String assertGetStringByName(final SolrParams params, final String param) {
+    final String value = tryGetStringByName(params, param, null);
+
+    throwIfNull(param, value);
+
+    return value;
+  }
+
+  static String tryGetStringByName(final SolrParams params, final String param, final String defaultValue) {
     final String value = params.get(param);
     if (isEmpty(value)) {
       return defaultValue;
     }
 
     return value;
+  }
+
+  static boolean assertGetBooleanByName(final SolrParams params, final String param) {
+    final boolean value = tryGetBooleanByName(params, param, null);
+
+    throwIfNull(param, value);
+
+    return value;
+  }
+
+  static Boolean tryGetBooleanByName(final SolrParams params, final String param, final Boolean defaultValue) {
+    final String value = params.get(param);
+    if (isEmpty(value)) {
+      return defaultValue;
+    }
+
+    return Boolean.parseBoolean(value);
   }
 
   static String[] getStringByPrefix(final SolrParams params, final CharSequence prefix) {
@@ -41,7 +74,7 @@ final class ParamUtil {
         continue;
       }
 
-      final String newKey = getStringByName(params, paramKey, "");
+      final String newKey = tryGetStringByName(params, paramKey, "");
       if (!"".equals(newKey)) {
         keyList.add(newKey);
       }
@@ -52,5 +85,11 @@ final class ParamUtil {
 
   private static boolean isEmpty(final String value) {
     return value == null || "".equals(value);
+  }
+
+  private static void throwIfNull(final String param, final Object defaultValue) {
+    if (defaultValue == null) {
+      throw new IllegalArgumentException(String.format("Required parameter \"%s\" missing", param));
+    }
   }
 }

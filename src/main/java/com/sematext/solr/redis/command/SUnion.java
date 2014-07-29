@@ -11,7 +11,7 @@ public final class SUnion implements Command<MultiKeyCommands> {
   private static final Logger log = LoggerFactory.getLogger(SUnion.class);
 
   @Override
-  public Map<String, Float> execute(final MultiKeyCommands client, final String key, final SolrParams params) {
+  public Map<String, Float> execute(final MultiKeyCommands client, final SolrParams params) {
     final String[] keys = ParamUtil.getStringByPrefix(params, "key");
 
     log.debug("Fetching SUNION from Redis for keys: {}", keys);

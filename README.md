@@ -32,7 +32,7 @@ Configure the query parser plugin in `solrconfig.xml`. Add the following to the 
 
 ### Allowed parameters for the RedisQParserPlugin:
 
- * **command** - Redis command. Currently allowed: `SMEMBERS`, `SRANDMEMBER`, `SDIFF`, `SINTER`, `SUNION`, `ZRANGE`, `ZREVRANGE`, `ZRANGEBYSCORE`, `ZREVRANGEBYSCORE`, `HKEYS`, `HMGET`, `HVALS`, `LRANGE`, `LINDEX`, `GET`, `MGET`, `KEYS`, `SORT` (required)
+ * **command** - Redis command. Currently allowed: `SMEMBERS`, `SRANDMEMBER`, `SDIFF`, `SINTER`, `SUNION`, `ZRANGE`, `ZREVRANGE`, `ZRANGEBYSCORE`, `ZREVRANGEBYSCORE`, `HKEYS`, `HMGET`, `HVALS`, `LRANGE`, `LINDEX`, `GET`, `MGET`, `KEYS`, `SORT`, `EVAL`, `EVALSHA` (required)
  * **key** - Key used to fetch data from Redis (required)
  * **operator** - Operator which connects terms taken from Redis. Allowed values are AND/OR (optional - default is OR)
  * **useAnalyzer** - Turns on and off query time analyzer true/false (optional - default is true)
@@ -74,6 +74,18 @@ SORT specific parameters:
  * **algorithm** - Sort algorithm to apply. Pass "alpha" to select alphanumeric sorting (default empty)
  * **by** - Specify a different sort keys
  * **get\*** - Anything that starts with the prefix **get** is assumed to a redis SORT GET parameter
+
+EVAL specific parameters:
+ * **script** - Specify the LUA script to run
+ * **returns_hash** - Specify if a LUA table like the following should be treated as a hash: `{1.2, 'str1', 2.2, 'str2'}`
+ * **key\*** - Anything that starts with the prefix **key** is assumed to be a key
+ * **arg\*** - Anything that starts with the prefix **arg** is assumed to be an arg
+
+EVALSHA specific parameters:
+ * **sha1** - Specify the SHA1 hash of the stored script
+ * **returns_hash** - Specify if a LUA table like the following should be treated as a hash: `{1.2, 'str1', 2.2, 'str2'}`
+ * **key\*** - Anything that starts with the prefix **key** is assumed to be a key
+ * **arg\*** - Anything that starts with the prefix **arg** is assumed to be an arg
 
 Examples of usage:
  * `q=*:*&fq={!redis command=SMEMBERS key=some_key}field`

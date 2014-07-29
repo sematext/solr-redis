@@ -10,9 +10,10 @@ public class ZRevRange implements Command<JedisCommands> {
   private static final Logger log = LoggerFactory.getLogger(ZRevRange.class);
 
   @Override
-  public Map<String, Float> execute(final JedisCommands client, final String key, final SolrParams params) {
-    final long start = ParamUtil.getIntByName(params, "range_start", 0);
-    final long end = ParamUtil.getIntByName(params, "range_end", -1);
+  public Map<String, Float> execute(final JedisCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
+    final long start = ParamUtil.tryGetIntByName(params, "range_start", 0);
+    final long end = ParamUtil.tryGetIntByName(params, "range_end", -1);
 
     log.debug("Fetching ZREVRANGE from Redis for key: {} ({}, {})", key, start, end);
 

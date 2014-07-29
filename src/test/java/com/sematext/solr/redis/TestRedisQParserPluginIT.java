@@ -1,5 +1,6 @@
 package com.sematext.solr.redis;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
@@ -950,6 +951,183 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     }
 
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+  }
+
+  @Test
+  public void shouldReturnSingleDocumentOnEvalWithString() {
+    final String[] doc = {"id", "1", "string_field", "test"};
+    assertU(adoc(doc));
+    assertU(commit());
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "*:*");
+
+    params.set("fq", "{!redis command=eval script='return KEYS[1];' key=test}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    params.set("fq", "{!redis command=eval script='return KEYS[1];' key=test}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+
+    params.set("fq", "{!redis command=eval script='return ARGV[1];' arg=test}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    params.set("fq", "{!redis command=eval script='return ARGV[1];' arg=test}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+
+    params.set("fq", "{!redis command=eval script='return \\'test\\';'}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    params.set("fq", "{!redis command=eval script='return \\'test\\';'}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+  }
+
+  @Test
+  public void shouldReturnSingleDocumentOnEvalWithInteger() {
+    String hash;
+    final String[] doc = {"id", "1", "int_field", "100"};
+    assertU(adoc(doc));
+    assertU(commit());
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "*:*");
+
+    params.set("fq", "{!redis command=eval script='return KEYS[1] + 0;' key=100}int_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    hash = sha1("return KEYS[1] + 0;");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " key=100}int_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+
+    params.set("fq", "{!redis command=eval script='return ARGV[1] + 0;' arg=100}int_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    hash = sha1("return ARGV[1] + 0;");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " arg=100}int_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+
+    params.set("fq", "{!redis command=eval script='return 100;'}int_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    hash = sha1("return 100;");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + "}int_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+  }
+
+  @Test
+  public void shouldReturnSingleDocumentOnEvalWithDouble() {
+    String hash;
+    final String[] doc = {"id", "1", "double_field", "1.123"};
+    assertU(adoc(doc));
+    assertU(commit());
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "*:*");
+
+    params.set("fq", "{!redis command=eval script='return KEYS[1];' key=1.123}double_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    hash = sha1("return KEYS[1];");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " key=1.123}double_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+
+    params.set("fq", "{!redis command=eval script='return ARGV[1];' arg=1.123}double_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    hash = sha1("return ARGV[1];");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " arg=1.123}double_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+
+    params.set("fq", "{!redis command=eval script='return \\'1.123\\';'}double_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+    hash = sha1("return '1.123';");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + "}double_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+  }
+
+  @Test
+  public void shouldReturnSingleDocumentOnEvalWithList() {
+    String hash;
+    final String[] doc1 = {"id", "1", "string_field", "one"};
+    final String[] doc2 = {"id", "2", "string_field", "two"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(commit());
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "*:*");
+
+    params.set("fq", "{!redis command=eval script='return KEYS;' key=one key0=two}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']");
+    hash = sha1("return KEYS;");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " key=one key0=two}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']");
+
+    params.set("fq", "{!redis command=eval script='return ARGV;' arg=one arg0=two}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']");
+    hash = sha1("return ARGV;");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " arg=one arg0=two}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']");
+
+    params.set("fq", "{!redis command=eval script='return {\\'one\\', \\'two\\'};'}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']");
+    hash = sha1("return {'one', 'two'};");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + "}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']");
+  }
+
+  @Test
+  public void shouldReturnSingleDocumentOnEvalWithHash() {
+    final String[] doc1 = {"id", "1", "string_field", "one"};
+    final String[] doc2 = {"id", "2", "string_field", "two"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(commit());
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "{!redis command=eval script='return {\\'one\\', \\'1.2\\', \\'two\\', \\'1.3\\'};' returns_hash=true}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='2']",
+        "//result/doc[2]/str[@name='id'][.='1']");
+    final String hash = sha1("return {'one', '1.2', 'two', '1.3'};");
+    params.set("q", "{!redis command=evalsha sha1=" + hash + " returns_hash=true}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='2']",
+        "//result/doc[2]/str[@name='id'][.='1']");
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void shouldThrowExceptionOnEvalWithExpectedHashAndUnevenNumberOfElements() throws Exception {
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "{!redis command=eval script='return {1, 2, 3};' returns_hash=true}string_field");
+    JQ(req(params));
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void shouldThrowExceptionOnEvalStringAsKey() throws Exception {
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "{!redis command=eval script='return {\\'foo\\', \\'bar\\'};' returns_hash=true}string_field");
+    JQ(req(params));
+  }
+
+  @Test
+  public void shouldHandleNullFromEval() throws Exception {
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "{!redis command=eval script='return nil;'}string_field");
+    JQ(req(params));
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void shouldThrowExceptionOnEvalReturningNestedTable() throws Exception {
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "{!redis command=eval script='return {1, {1}};'}string_field");
+    JQ(req(params));
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void shouldThrowExceptionOnEvalReturningNestedTableAsHash() throws Exception {
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "{!redis command=eval script='return {1, {1}};' returns_hash=true}string_field");
+    JQ(req(params));
+  }
+
+  private static String sha1(final String input) {
+    return DigestUtils.sha1Hex(input);
   }
 
   /**

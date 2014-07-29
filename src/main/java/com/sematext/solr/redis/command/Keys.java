@@ -10,7 +10,9 @@ public final class Keys implements Command<MultiKeyCommands> {
   private static final Logger log = LoggerFactory.getLogger(Keys.class);
 
   @Override
-  public Map<String, Float> execute(final MultiKeyCommands client, final String key, final SolrParams params) {
+  public Map<String, Float> execute(final MultiKeyCommands client, final SolrParams params) {
+    final String key = ParamUtil.assertGetStringByName(params, "key");
+
     log.debug("Fetching KEYS from Redis for key: {}", key);
 
     return ResultUtil.stringIteratorToMap(client.keys(key));
