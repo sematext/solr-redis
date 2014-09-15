@@ -139,6 +139,7 @@ final class RedisQParser extends QParser {
           final Float score = entry.getValue();
 
           if (useQueryTimeAnalyzer) {
+            log.trace("Term string {}", termString);
             tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
 
             final CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
@@ -148,21 +149,16 @@ final class RedisQParser extends QParser {
             while (tokenStream.incrementToken()) {
 
               log.trace("Taking {} token {} with score {} from query string from {} for field: {}", ++counter,
-                  new String(charAttribute.buffer()), score, termString, fieldName);
+                  charAttribute, score, termString, fieldName);
 
-              final TermQuery termQuery = new TermQuery(new Term(fieldName, new BytesRef(charAttribute)));
-              if (!score.isNaN()) {
-                termQuery.setBoost(score);
-              }
-              booleanQuery.add(termQuery, this.operator);
+              addTermToQuery(booleanQuery, fieldName, new BytesRef(charAttribute), score);
               ++booleanClausesTotal;
             }
 
             tokenStream.end();
             tokenStream.close();
           } else {
-            final TermQuery termQuery = new TermQuery(new Term(fieldName, new BytesRef(termString)));
-            booleanQuery.add(termQuery, this.operator);
+            addTermToQuery(booleanQuery, fieldName, new BytesRef(termString), score);
             ++booleanClausesTotal;
           }
         } catch (final IOException ex) {
@@ -174,6 +170,16 @@ final class RedisQParser extends QParser {
     log.debug("Prepared a query for field {} with {} boolean clauses", fieldName, booleanClausesTotal);
 
     return booleanQuery;
+  }
+
+  private void addTermToQuery(final BooleanQuery query, final String fieldName, final BytesRef term, final Float score) {
+    final TermQuery termQuery = new TermQuery(new Term(fieldName, term));
+
+    if (!score.isNaN()) {
+      termQuery.setBoost(score);
+    }
+
+    query.add(termQuery, this.operator);
   }
 
   private void fetchDataFromRedis(final String redisCommand, final int maxRetries) {
