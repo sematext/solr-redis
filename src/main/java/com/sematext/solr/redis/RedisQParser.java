@@ -130,7 +130,6 @@ final class RedisQParser extends QParser {
 
       for (final Map.Entry<String, Float> entry : results.entrySet()) {
         try {
-          final TokenStream tokenStream;
           final String termString = entry.getKey();
           if (termString == null) {
             continue;
@@ -139,24 +138,25 @@ final class RedisQParser extends QParser {
           final Float score = entry.getValue();
 
           if (useQueryTimeAnalyzer) {
+
             log.trace("Term string {}", termString);
-            tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
 
-            final CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
-            tokenStream.reset();
+            try (final TokenStream tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString)) {
+              final CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+              tokenStream.reset();
 
-            int counter = 0;
-            while (tokenStream.incrementToken()) {
+              int counter = 0;
+              while (tokenStream.incrementToken()) {
 
-              log.trace("Taking {} token {} with score {} from query string from {} for field: {}", ++counter,
-                  charAttribute, score, termString, fieldName);
+                log.trace("Taking {} token {} with score {} from query string from {} for field: {}", ++counter,
+                    charAttribute, score, termString, fieldName);
 
-              addTermToQuery(booleanQuery, fieldName, new BytesRef(charAttribute), score);
-              ++booleanClausesTotal;
+                addTermToQuery(booleanQuery, fieldName, new BytesRef(charAttribute), score);
+                ++booleanClausesTotal;
+              }
+
+              tokenStream.end();
             }
-
-            tokenStream.end();
-            tokenStream.close();
           } else {
             addTermToQuery(booleanQuery, fieldName, new BytesRef(termString), score);
             ++booleanClausesTotal;
