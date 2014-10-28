@@ -1,6 +1,7 @@
 package com.sematext.solr.redis;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.solr.SolrTestCaseJ4;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
@@ -1123,6 +1124,28 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
   public void shouldThrowExceptionOnEvalReturningNestedTableAsHash() throws Exception {
     final ModifiableSolrParams params = new ModifiableSolrParams();
     params.set("q", "{!redis command=eval script='return {1, {1}};' returns_hash=true}string_field");
+    JQ(req(params));
+  }
+
+  @Test(expected = BooleanQuery.TooManyClauses.class)
+  public void shouldGracefullyHandleMaxBooleanClausesLimit() throws Exception {
+    final int size = 1025;
+    final String[] values = new String[size];
+    for (Integer a = 0; a < size; a++) {
+      values[a] = a.toString();
+    }
+
+    jedis.sadd("overlong_set", values);
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "{!redis command=smembers key=overlong_set}string_field");
+
+    try {
+      JQ(req(params));
+    } catch (final BooleanQuery.TooManyClauses ignored) {
+    }
+
+    // Run again to make sure we are in the right state
     JQ(req(params));
   }
 

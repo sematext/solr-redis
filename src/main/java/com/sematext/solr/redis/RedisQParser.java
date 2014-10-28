@@ -130,7 +130,6 @@ final class RedisQParser extends QParser {
 
       for (final Map.Entry<String, Float> entry : results.entrySet()) {
         try {
-          final TokenStream tokenStream;
           final String termString = entry.getKey();
           if (termString == null) {
             continue;
@@ -139,30 +138,27 @@ final class RedisQParser extends QParser {
           final Float score = entry.getValue();
 
           if (useQueryTimeAnalyzer) {
-            tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString);
 
-            final CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
-            tokenStream.reset();
+            log.trace("Term string {}", termString);
 
-            int counter = 0;
-            while (tokenStream.incrementToken()) {
+            try (final TokenStream tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString)) {
+              final CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+              tokenStream.reset();
 
-              log.trace("Taking {} token {} with score {} from query string from {} for field: {}", ++counter,
-                  new String(charAttribute.buffer()), score, termString, fieldName);
+              int counter = 0;
+              while (tokenStream.incrementToken()) {
 
-              final TermQuery termQuery = new TermQuery(new Term(fieldName, new BytesRef(charAttribute)));
-              if (!score.isNaN()) {
-                termQuery.setBoost(score);
+                log.trace("Taking {} token {} with score {} from query string from {} for field: {}", ++counter,
+                    charAttribute, score, termString, fieldName);
+
+                addTermToQuery(booleanQuery, fieldName, new BytesRef(charAttribute), score);
+                ++booleanClausesTotal;
               }
-              booleanQuery.add(termQuery, this.operator);
-              ++booleanClausesTotal;
-            }
 
-            tokenStream.end();
-            tokenStream.close();
+              tokenStream.end();
+            }
           } else {
-            final TermQuery termQuery = new TermQuery(new Term(fieldName, new BytesRef(termString)));
-            booleanQuery.add(termQuery, this.operator);
+            addTermToQuery(booleanQuery, fieldName, new BytesRef(termString), score);
             ++booleanClausesTotal;
           }
         } catch (final IOException ex) {
@@ -174,6 +170,16 @@ final class RedisQParser extends QParser {
     log.debug("Prepared a query for field {} with {} boolean clauses", fieldName, booleanClausesTotal);
 
     return booleanQuery;
+  }
+
+  private void addTermToQuery(final BooleanQuery query, final String fieldName, final BytesRef term, final Float score) {
+    final TermQuery termQuery = new TermQuery(new Term(fieldName, term));
+
+    if (!score.isNaN()) {
+      termQuery.setBoost(score);
+    }
+
+    query.add(termQuery, this.operator);
   }
 
   private void fetchDataFromRedis(final String redisCommand, final int maxRetries) {
