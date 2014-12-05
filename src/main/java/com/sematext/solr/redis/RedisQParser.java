@@ -1,5 +1,6 @@
 package com.sematext.solr.redis;
 
+import com.sematext.lucene.query.TaggedQuery;
 import com.sematext.solr.redis.command.Command;
 import com.sematext.solr.redis.command.Eval;
 import com.sematext.solr.redis.command.EvalSha;
@@ -43,6 +44,7 @@ import redis.clients.jedis.exceptions.JedisException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
@@ -51,6 +53,7 @@ final class RedisQParser extends QParser {
   private static final Logger log = LoggerFactory.getLogger(RedisQParser.class);
 
   private static final Map<String, Command<?>> commands;
+
   static {
     commands = new HashMap<>();
     commands.put("SDIFF", new SDiff());
@@ -86,6 +89,7 @@ final class RedisQParser extends QParser {
   private Map<String, Float> results;
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
   private final String redisCommand;
+  private final String fieldAlias;
   private final boolean useQueryTimeAnalyzer;
   private final int maxJedisRetries;
 
@@ -101,6 +105,7 @@ final class RedisQParser extends QParser {
 
     redisCommand = localParams.get("command") == null ? null : localParams.get("command").toUpperCase();
     final String operatorString = localParams.get("operator");
+    fieldAlias = localParams.get("field_alias");
 
     if (redisCommand == null) {
       log.error("No command argument passed to RedisQParser.");
@@ -169,7 +174,11 @@ final class RedisQParser extends QParser {
 
     log.debug("Prepared a query for field {} with {} boolean clauses", fieldName, booleanClausesTotal);
 
-    return booleanQuery;
+    if (StringUtils.isEmpty(fieldAlias)) {
+      return booleanQuery;
+    } else {
+      return new TaggedQuery(booleanQuery, qstr);
+    }
   }
 
   private void addTermToQuery(final BooleanQuery query, final String fieldName, final BytesRef term, final Float score) {
