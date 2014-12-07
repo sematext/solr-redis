@@ -44,7 +44,6 @@ import redis.clients.jedis.exceptions.JedisException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
@@ -174,10 +173,10 @@ final class RedisQParser extends QParser {
 
     log.debug("Prepared a query for field {} with {} boolean clauses", fieldName, booleanClausesTotal);
 
-    if (StringUtils.isEmpty(fieldAlias)) {
+    if (fieldAlias == null || fieldAlias.isEmpty()) {
       return booleanQuery;
     } else {
-      return new TaggedQuery(booleanQuery, qstr);
+      return new TaggedQuery(booleanQuery, fieldAlias);
     }
   }
 
