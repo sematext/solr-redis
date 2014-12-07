@@ -33,6 +33,7 @@ public abstract class QueryExtractor<T extends Query> {
     for (QueryExtractor extractor : extractors) {
       if (extractor.cls.isAssignableFrom(q.getClass())) {
         extractor.extract(q, extractors, extractedQueries);
+        return;
       }
     }
     throw new UnsupportedOperationException("No extractor found for class: " + q.getClass());
