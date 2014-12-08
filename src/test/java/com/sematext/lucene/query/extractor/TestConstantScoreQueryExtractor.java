@@ -1,6 +1,5 @@
 package com.sematext.lucene.query.extractor;
 
-import static com.sematext.lucene.query.extractor.TestQueryExtractor.DEFAULT_EXTRACTORS;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.lucene.search.ConstantScoreQuery;
@@ -11,7 +10,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import static org.mockito.Mockito.mock;
 
-public class TestConstantScoreQueryExtractor {
+public class TestConstantScoreQueryExtractor extends TestQueryExtractor {
 
   @Test
   public void testExtractWrappedQuery() {
