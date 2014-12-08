@@ -15,7 +15,7 @@ public class TestBooleanQueryExtractor extends TestQueryExtractor {
   public void testExtractTwoSubqueries() {
     Query q1 = mock(Query.class);
     Query q2 = mock(Query.class);
-    
+
     BooleanQuery booleanQuery = new BooleanQuery();
     BooleanQueryExtractor booleanQueryExtractor = new BooleanQueryExtractor();
 
