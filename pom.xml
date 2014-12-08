@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sematext</groupId>
     <artifactId>solr-redis</artifactId>
-    <version>1.3.0</version>
+    <version>1.5.0</version>
     <packaging>jar</packaging>
     <name>Solr Redis </name>
     <description>Solr Redis plugin</description>
