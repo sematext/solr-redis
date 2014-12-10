@@ -6,9 +6,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.lucene.search.Query;
+import org.apache.solr.common.params.HighlightParams;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.common.util.SimpleOrderedMap;
 import org.apache.solr.core.SolrCore;
@@ -56,7 +60,21 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
       log.debug("Collecting highlights for Running default highlighter. No tagged queries are used in main query.");
       Map<String, SimpleOrderedMap> results = new HashMap<>();
       results.put(MAIN_HIGHLIGHT, (SimpleOrderedMap) super.doHighlighting(docs, query, req, defaultFields));
+
+      Set<String> originalFields = new HashSet<>(Arrays.asList(req.getParams().getParams(HighlightParams.FIELDS)));
       for (TaggedQuery taggedQuery : taggedQueries) {
+        Set<String> fields = new HashSet<>();
+        QueryExtractor.extractFields(taggedQuery, fields);
+        ModifiableSolrParams params = new ModifiableSolrParams(req.getParams());
+
+        //Continue if original field set doesn't contain subfields or field alias
+        if (!containsField(taggedQuery.getTag(), originalFields, fields)) {
+          continue;
+        }
+
+        params.remove(HighlightParams.FIELDS);
+        params.add(HighlightParams.FIELDS, fields.toArray(new String[0]));
+        req.setParams(params);
         SimpleOrderedMap partialResult =
                 (SimpleOrderedMap) super.doHighlighting(docs, taggedQuery.getWrappedQuery(), req, defaultFields);
         results.put(taggedQuery.getTag(), partialResult);
@@ -66,6 +84,16 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
     }
   }
 
+  private boolean containsField(String fieldAlias, Set<String> originalFields, Set<String> subFields) {
+    boolean containsAlias = originalFields.contains(fieldAlias);
+    originalFields.retainAll(subFields);
+    boolean containsSubfields = (originalFields.size() > 0);
+    if (containsAlias || containsSubfields) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   private SimpleOrderedMap mergeResults(Map<String, SimpleOrderedMap> results) {
     SimpleOrderedMap mergedResult = new SimpleOrderedMap();
