@@ -1,6 +1,7 @@
 package com.sematext.lucene.query;
 
 import java.io.IOException;
+import java.util.Objects;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Query;
 
@@ -39,6 +40,32 @@ public class TaggedQuery extends Query {
     builder.append(wrappedQuery.toString());
     builder.append("]");
     return builder.toString();
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 5;
+    hash = 79 * hash + Objects.hashCode(this.wrappedQuery);
+    hash = 79 * hash + Objects.hashCode(this.tag);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final TaggedQuery other = (TaggedQuery) obj;
+    if (!Objects.equals(this.wrappedQuery, other.wrappedQuery)) {
+      return false;
+    }
+    if (!Objects.equals(this.tag, other.tag)) {
+      return false;
+    }
+    return true;
   }
 
 }

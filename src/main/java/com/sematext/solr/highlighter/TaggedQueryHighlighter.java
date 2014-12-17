@@ -19,6 +19,7 @@ import org.apache.solr.core.SolrCore;
 import org.apache.solr.highlight.DefaultSolrHighlighter;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.DocList;
+import org.apache.solr.util.SolrPluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,8 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
       Map<String, SimpleOrderedMap> results = new HashMap<>();
       results.put(MAIN_HIGHLIGHT, (SimpleOrderedMap) super.doHighlighting(docs, query, req, defaultFields));
 
-      Set<String> originalFields = new HashSet<>(Arrays.asList(req.getParams().getParams(HighlightParams.FIELDS)));
+      Set<String> originalFields = new HashSet<>(
+              Arrays.asList(SolrPluginUtils.split(req.getParams().getParams(HighlightParams.FIELDS)[0])));
       for (TaggedQuery taggedQuery : taggedQueries) {
         Set<String> fields = new HashSet<>();
         QueryExtractor.extractFields(taggedQuery, fields);
@@ -86,8 +88,9 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
 
   private boolean containsField(String fieldAlias, Set<String> originalFields, Set<String> subFields) {
     boolean containsAlias = originalFields.contains(fieldAlias);
-    originalFields.retainAll(subFields);
-    boolean containsSubfields = (originalFields.size() > 0);
+    Set<String> tmpOriginalField = new HashSet<>(originalFields);
+    tmpOriginalField.retainAll(subFields);
+    boolean containsSubfields = (tmpOriginalField.size() > 0);
     if (containsAlias || containsSubfields) {
       return true;
     } else {
