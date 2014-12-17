@@ -47,10 +47,19 @@ import java.util.Map;
 
 /**
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
+ *
+ * @author prog
+ * @author lstrojny
  */
 final class RedisQParser extends QParser {
+  /**
+   * Logger
+   */
   private static final Logger log = LoggerFactory.getLogger(RedisQParser.class);
 
+  /**
+   * Collection of commands
+   */
   private static final Map<String, Command<?>> commands;
 
   static {
@@ -84,19 +93,63 @@ final class RedisQParser extends QParser {
     commands.put("EVALSHA", new EvalSha());
   }
 
+  /**
+   * Jedis pool object.
+   */
   private final JedisPool jedisPool;
+
+  /**
+   * Results of redis command.
+   */
   private Map<String, Float> results;
+
+  /**
+   * Operator used to build query.
+   */
   private BooleanClause.Occur operator = BooleanClause.Occur.SHOULD;
+
+  /**
+   * Redis command name to use.
+   */
   private final String redisCommand;
+
+  /**
+   * Field alias name - virtual field name. Used for highlighting.
+   */
   private final String fieldAlias;
+
+  /**
+   * Parameters which determines if this QParser should analyze data from Redis.
+   */
   private final boolean useQueryTimeAnalyzer;
+
+  /**
+   * Parameter which determines how many times Redis operation should be retried before throwing an exception.
+   */
   private final int maxJedisRetries;
 
+  /**
+   *
+   * @param qstr Query string
+   * @param localParams Local parameters for this query parser
+   * @param params Parameters
+   * @param req Request object
+   * @param jedisPool Jedis pool which should be used to connect to Redis.
+   */
   RedisQParser(final String qstr, final SolrParams localParams, final SolrParams params, final SolrQueryRequest req,
     final JedisPool jedisPool) {
     this(qstr, localParams, params, req, jedisPool, 0);
   }
 
+  /**
+   *
+   * @param qstr Query string
+   * @param localParams Local parameters for this query parser
+   * @param params Parameters
+   * @param req Request object
+   * @param jedisPool Jedis pool which should be used to connect to Redis.
+   * @param maxJedisRetries Parameter which determines how many times Redis operation should be retried
+   */
   RedisQParser(final String qstr, final SolrParams localParams, final SolrParams params, final SolrQueryRequest req,
           final JedisPool jedisPool, final int maxJedisRetries) {
     super(qstr, localParams, params, req);
@@ -109,7 +162,9 @@ final class RedisQParser extends QParser {
     if (redisCommand == null) {
       log.error("No command argument passed to RedisQParser.");
       throw new IllegalArgumentException("No command argument passed to RedisQParser.");
-    } else if (!commands.containsKey(redisCommand)) {
+    }
+    else if (!commands.containsKey(redisCommand))
+    {
       log.error("Wrong Redis command: {}", redisCommand);
       throw new IllegalArgumentException(String.format("Wrong Redis command '%s'.", redisCommand));
     }
@@ -145,7 +200,8 @@ final class RedisQParser extends QParser {
 
             log.trace("Term string {}", termString);
 
-            try (final TokenStream tokenStream = req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString)) {
+            try (final TokenStream tokenStream =
+                req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString)) {
               final CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
               tokenStream.reset();
 
@@ -180,7 +236,16 @@ final class RedisQParser extends QParser {
     }
   }
 
-  private void addTermToQuery(final BooleanQuery query, final String fieldName, final BytesRef term, final Float score) {
+  /**
+   * Adds clause to query.
+   *
+   * @param query Boolean query object which should take new clauses.
+   * @param fieldName Field name used in added clause.
+   * @param term Term
+   * @param score Optional score
+   */
+  private void addTermToQuery(final BooleanQuery query, final String fieldName, final BytesRef term,
+      final Float score) {
     final TermQuery termQuery = new TermQuery(new Term(fieldName, term));
 
     if (!score.isNaN()) {
@@ -190,6 +255,11 @@ final class RedisQParser extends QParser {
     query.add(termQuery, this.operator);
   }
 
+  /**
+   *
+   * @param redisCommand Redus command
+   * @param maxRetries Maximum retries of Redis command
+   */
   private void fetchDataFromRedis(final String redisCommand, final int maxRetries) {
     int retries = 0;
     final Command command = commands.get(redisCommand);

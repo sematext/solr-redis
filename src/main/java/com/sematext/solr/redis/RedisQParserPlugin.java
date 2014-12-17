@@ -18,24 +18,70 @@ import redis.clients.jedis.Protocol;
  * <p> RedisQParserPlugin initiates connection with Redis and pass the connection
  * object to RedisQParser which is responsible for fetching data and building a
  * query.
+ *
+ * @author prog
+ * @author lstrojny
  */
 public class RedisQParserPlugin extends QParserPlugin {
 
+  /**
+   * Logger
+   */
   private static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
 
+  /**
+   * Redis parameter name constant.
+   */
   public static final String NAME = "redis";
+
+  /**
+   * Host name parameter name constant
+   */
   private static final String HOST_FIELD = "host";
+
+  /**
+   * Maximum number of connections to redis parameter name constant
+   */
   private static final String MAX_CONNECTIONS_FIELD = "maxConnections";
+
+  /**
+   * Number of retries parameter name constant
+   */
   private static final String RETRIES_FIELD = "retries";
+
+  /**
+   * Database name parameter name constant
+   */
   private static final String DATABASE_FIELD = "database";
+
+  /**
+   * Password parameter name constant
+   */
   private static final String PASSWORD_FIELD = "password";
+
+  /**
+   * Redis parameter name constant
+   */
   private static final String TIMEOUT_FIELD = "timeout";
 
+  /**
+   * Default number of connections limit
+   */
   private static final int DEFAULT_MAX_CONNECTIONS = 5;
+
+  /**
+   * Default number of operation retries
+   */
   private static final int DEFAULT_RETRIES = 1;
 
+  /**
+   * Redis connection pool object
+   */
   private JedisPool jedisConnectorPool;
 
+  /**
+   * Number of retries property
+   */
   private int retries = DEFAULT_RETRIES;
 
   @Override
@@ -67,16 +113,43 @@ public class RedisQParserPlugin extends QParserPlugin {
     return retries;
   }
 
+  /**
+   * Creates redis connection pool.
+   *
+   * @param poolConfig Pool configuration
+   * @param host Hostname
+   * @param port Port
+   * @param timeout Timeout value optional
+   * @param password Password optional
+   * @param database Database name optional
+   * @return Prepared connection pool
+   */
   JedisPool createPool(final GenericObjectPoolConfig poolConfig, final String host, final int port, final int timeout,
     final String password, final int database) {
     return new JedisPool(poolConfig, host, port, timeout, password, database);
   }
 
+  /**
+   * Extract integer value from parameters list.
+   *
+   * @param args Arguments list
+   * @param key Name of field
+   * @param def Default value
+   * @return Integer value of parameter with given name
+   */
   private int getInt(final NamedList args, final String key, final int def) {
     final Object value = args != null ? args.get(key) : null;
     return value instanceof String ? Integer.parseInt((String) value) : def;
   }
 
+  /**
+   * Extract string  value from parameters list.
+   *
+   * @param args Arguments list
+   * @param key Name of field
+   * @param def Default value
+   * @return String value of parameter with given name
+   */
   private String getString(final NamedList args, final String key, final String def) {
     final Object value = args != null ? args.get(key) : null;
     return value instanceof String ? (String) value : def;

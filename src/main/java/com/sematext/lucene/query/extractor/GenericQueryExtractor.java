@@ -4,8 +4,15 @@ import java.util.List;
 import java.util.Set;
 import org.apache.lucene.search.Query;
 
+/**
+ * GenericQueryExtractor. Used if no other extractors matches. Lower level (leaf) extractor.
+ * @author prog
+ */
 public class GenericQueryExtractor extends QueryExtractor<Query> {
 
+  /**
+   * Default constructor. It only uses super class constructor giving as an argument query class.
+   */
   public GenericQueryExtractor() {
     super(Query.class);
   }

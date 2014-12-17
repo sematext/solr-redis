@@ -6,8 +6,15 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 
+/**
+ * PhraseQueryExtractor. Lower level (leaf) extractor.
+ * @author prog
+ */
 public class PhraseQueryExtractor extends QueryExtractor<PhraseQuery> {
 
+  /**
+   * Default constructor. It only uses super class constructor giving as an argument query class.
+   */
   public PhraseQueryExtractor() {
     super(PhraseQuery.class);
   }

@@ -5,8 +5,18 @@ import java.util.Set;
 import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.Query;
 
+/**
+ * Exctractor for ConstantScoreQuery.
+ * It extracts inner query. If there is no inner query and only filter this extractor will do nothing.
+ *
+ * @author prog
+ */
 public class ConstantScoreQueryExtractor extends QueryExtractor<ConstantScoreQuery> {
 
+  /**
+   * Default constructor.
+   * It only uses super class constructor giving as an argument query class.
+   */
   public ConstantScoreQueryExtractor() {
     super(ConstantScoreQuery.class);
   }
@@ -16,7 +26,9 @@ public class ConstantScoreQueryExtractor extends QueryExtractor<ConstantScoreQue
           List<Query> extractedQueries) throws UnsupportedOperationException {
     if (q.getQuery() != null) {
       extractQuery(q.getQuery(), extractors, extractedQueries);
-    } else {
+    }
+    else
+    {
       extractQuery(q, extractors, extractedQueries);
     }
   }

@@ -5,8 +5,17 @@ import java.util.Set;
 import org.apache.lucene.search.FilteredQuery;
 import org.apache.lucene.search.Query;
 
+/**
+ * Exctractor for FilteredQuery.
+ * It extracts inner query.
+ *
+ * @author prog
+ */
 public class FilteredQueryExtractor extends QueryExtractor<FilteredQuery> {
 
+  /**
+   * Default constructor. It only uses super class constructor giving as an argument query class.
+   */
   public FilteredQueryExtractor() {
     super(FilteredQuery.class);
   }
@@ -16,7 +25,9 @@ public class FilteredQueryExtractor extends QueryExtractor<FilteredQuery> {
           List<Query> extractedQueries) throws UnsupportedOperationException {
     if (q.getQuery() != null) {
       extractQuery(q.getQuery(), extractors, extractedQueries);
-    } else {
+    }
+    else
+    {
       extractQuery(q, extractors, extractedQueries);
     }
   }

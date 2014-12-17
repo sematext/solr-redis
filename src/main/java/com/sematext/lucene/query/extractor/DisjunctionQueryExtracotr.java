@@ -5,8 +5,17 @@ import java.util.Set;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.Query;
 
+/**
+ * Exctractor for ConstantScoreQuery.
+ * It extracts all inner/disjuncts queries.
+ *
+ * @author prog
+ */
 public class DisjunctionQueryExtracotr extends QueryExtractor<DisjunctionMaxQuery> {
 
+  /**
+   * Default constructor. It only uses super class constructor giving as an argument query class.
+   */
   public DisjunctionQueryExtracotr() {
     super(DisjunctionMaxQuery.class);
   }

@@ -9,14 +9,29 @@ import org.apache.lucene.search.Query;
  * This query is used to tag original query.
  *
  * Query wraps original one and adds metadata to it.
+ * @author prog
  */
 public class TaggedQuery extends Query {
 
+  /**
+   * Wrapped query which is tagged by internal tag field
+   */
   private final Query wrappedQuery;
+
+  /**
+   * Tag of this query
+   */
   private final String tag;
 
-  public TaggedQuery(Query q, String tag) {
-    this.wrappedQuery = q;
+  /**
+   * Tagged query gets two parameters in constructor. It is used to tag the given query with
+   * the given label.
+   *
+   * @param query query
+   * @param tag String tag
+   */
+  public TaggedQuery(final Query query, final String tag) {
+    this.wrappedQuery = query;
     this.tag = tag;
   }
 
@@ -27,7 +42,7 @@ public class TaggedQuery extends Query {
   public Query getWrappedQuery() {
     return wrappedQuery;
   }
-  
+
   @Override
   public Query rewrite(IndexReader reader) throws IOException {
     return wrappedQuery.rewrite(reader);
@@ -35,7 +50,7 @@ public class TaggedQuery extends Query {
 
   @Override
   public String toString(String field) {
-    StringBuilder builder = new StringBuilder();
+    final StringBuilder builder = new StringBuilder();
     builder.append("TaggedQuery [");
     builder.append(wrappedQuery.toString());
     builder.append("]");

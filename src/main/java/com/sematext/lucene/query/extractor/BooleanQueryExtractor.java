@@ -6,24 +6,33 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 
+/**
+ * Exctractor for BooleanQuery. It extracts all inner queries (from all clauses)
+ *
+ * @author prog
+ */
 public class BooleanQueryExtractor extends QueryExtractor<BooleanQuery> {
 
+  /**
+   * Default constructor. It only uses super class constructor giving as an argument query class.
+   */
   public BooleanQueryExtractor() {
     super(BooleanQuery.class);
   }
 
   @Override
-  public void extract(BooleanQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          List<Query> extractedQueries) throws UnsupportedOperationException {
-    BooleanClause[] clauses = q.getClauses();
+  public void extract(final BooleanQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
+          final List<Query> extractedQueries) throws UnsupportedOperationException {
+    final BooleanClause[] clauses = q.getClauses();
     for (int i = 0; i < clauses.length; ++i) {
       extractQuery(clauses[i].getQuery(), extractors, extractedQueries);
     }
   }
 
   @Override
-  public void extractSubQueriesFields(BooleanQuery q, Iterable<QueryExtractor<? extends Query>> extractors, Set<String> extractedFields) throws UnsupportedOperationException {
-    BooleanClause[] clauses = q.getClauses();
+  public void extractSubQueriesFields(final BooleanQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
+      final Set<String> extractedFields) throws UnsupportedOperationException {
+    final BooleanClause[] clauses = q.getClauses();
     for (int i = 0; i < clauses.length; ++i) {
       extractFields(clauses[i].getQuery(), extractors, extractedFields);
     }
