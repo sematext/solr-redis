@@ -22,13 +22,13 @@ public class TermQueryExtractor extends QueryExtractor<TermQuery> {
 
   @Override
   public void extract(final TermQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
-          List<Query> extractedQueries) throws UnsupportedOperationException {
+          final List<Query> extractedQueries) throws UnsupportedOperationException {
     extractedQueries.add(q);
   }
 
   @Override
   public void extractSubQueriesFields(final TermQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
-          Set<String> extractedFields) throws UnsupportedOperationException {
+          final Set<String> extractedFields) throws UnsupportedOperationException {
     extractedFields.add(q.getTerm().field());
   }
 

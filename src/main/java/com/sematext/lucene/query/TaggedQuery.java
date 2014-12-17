@@ -44,12 +44,12 @@ public class TaggedQuery extends Query {
   }
 
   @Override
-  public Query rewrite(IndexReader reader) throws IOException {
+  public Query rewrite(final IndexReader reader) throws IOException {
     return wrappedQuery.rewrite(reader);
   }
 
   @Override
-  public String toString(String field) {
+  public String toString(final String field) {
     final StringBuilder builder = new StringBuilder();
     builder.append("TaggedQuery [");
     builder.append(wrappedQuery.toString());
@@ -66,7 +66,7 @@ public class TaggedQuery extends Query {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(final Object obj) {
     if (obj == null) {
       return false;
     }

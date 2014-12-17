@@ -36,7 +36,7 @@ public abstract class QueryExtractor<T extends Query> {
    * QueryExtractor
    * @param cls Class of extending extractor
    */
-  protected QueryExtractor(Class<T> cls) {
+  protected QueryExtractor(final Class<T> cls) {
     this.cls = cls;
   }
 

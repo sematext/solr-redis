@@ -21,8 +21,9 @@ public class FilteredQueryExtractor extends QueryExtractor<FilteredQuery> {
   }
 
   @Override
-  public void extract(FilteredQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          List<Query> extractedQueries) throws UnsupportedOperationException {
+  public void extract(final FilteredQuery q,
+          final Iterable<QueryExtractor<? extends Query>> extractors,
+          final List<Query> extractedQueries) throws UnsupportedOperationException {
     if (q.getQuery() != null) {
       extractQuery(q.getQuery(), extractors, extractedQueries);
     }
@@ -33,8 +34,9 @@ public class FilteredQueryExtractor extends QueryExtractor<FilteredQuery> {
   }
 
   @Override
-  public void extractSubQueriesFields(FilteredQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          Set<String> extractedFields) throws UnsupportedOperationException {
+  public void extractSubQueriesFields(final FilteredQuery q,
+          final Iterable<QueryExtractor<? extends Query>> extractors,
+          final Set<String> extractedFields) throws UnsupportedOperationException {
     if (q.getQuery() != null) {
       extractFields(q.getQuery(), extractors, extractedFields);
     }

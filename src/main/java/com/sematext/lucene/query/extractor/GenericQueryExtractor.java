@@ -18,13 +18,16 @@ public class GenericQueryExtractor extends QueryExtractor<Query> {
   }
 
   @Override
-  public void extract(Query q, Iterable<QueryExtractor<? extends Query>> extractors, List<Query> extractedQueries) {
+  public void extract(final Query q,
+          final Iterable<QueryExtractor<? extends Query>> extractors,
+          final List<Query> extractedQueries) {
     extractedQueries.add(q);
   }
 
   @Override
-  public void extractSubQueriesFields(Query q, Iterable<QueryExtractor<? extends Query>> extractors,
-          Set<String> extractedFields) throws UnsupportedOperationException {
+  public void extractSubQueriesFields(final Query q,
+          final Iterable<QueryExtractor<? extends Query>> extractors,
+          final Set<String> extractedFields) throws UnsupportedOperationException {
   }
 
 }

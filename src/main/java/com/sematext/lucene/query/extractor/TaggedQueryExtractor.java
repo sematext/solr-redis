@@ -22,13 +22,13 @@ public class TaggedQueryExtractor extends QueryExtractor<TaggedQuery> {
 
   @Override
   public void extract(final TaggedQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
-          List<Query> extractedQueries) throws UnsupportedOperationException {
+          final List<Query> extractedQueries) throws UnsupportedOperationException {
     extractedQueries.add(q);
   }
 
   @Override
   public void extractSubQueriesFields(final TaggedQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
-          Set<String> extractedFields) throws UnsupportedOperationException {
+          final Set<String> extractedFields) throws UnsupportedOperationException {
     extractFields(q.getWrappedQuery(), extractors, extractedFields);
   }
 

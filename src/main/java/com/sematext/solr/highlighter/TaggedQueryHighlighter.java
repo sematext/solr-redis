@@ -55,12 +55,13 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
    *
    * @param solrCore Solr core instance
    */
-  public TaggedQueryHighlighter(SolrCore solrCore) {
+  public TaggedQueryHighlighter(final SolrCore solrCore) {
     super(solrCore);
   }
 
   @Override
-  public NamedList<Object> doHighlighting(DocList docs, Query query, SolrQueryRequest req, String[] defaultFields)
+  public NamedList<Object> doHighlighting(final DocList docs, final Query query,
+          final SolrQueryRequest req, final String[] defaultFields)
       throws IOException {
 
     final List<TaggedQuery> taggedQueries = new ArrayList<>();
@@ -73,18 +74,14 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
           taggedQueries.add((TaggedQuery) extractedQuery);
         }
       }
-    }
-    catch (UnsupportedOperationException ex)
-    {
+    } catch (UnsupportedOperationException ex) {
       logger.warn("Cannot highlight query.", ex);
     }
 
     if (taggedQueries.isEmpty()) {
       logger.debug("Running default highlighter. No tagged queries are used in main query.");
       return super.doHighlighting(docs, query, req, defaultFields);
-    }
-    else
-    {
+    } else {
       logger.debug("Collecting highlights for Running default highlighter. No tagged queries are used in main query.");
       final Map<String, SimpleOrderedMap> results = new HashMap<>();
       results.put(MAIN_HIGHLIGHT, (SimpleOrderedMap) super.doHighlighting(docs, query, req, defaultFields));
@@ -121,7 +118,8 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
    * @param subFields All fields in inner queries of tagged query
    * @return Returns true if field should be highlighted and false otherwise.
    */
-  private boolean containsField(String fieldAlias, Set<String> originalFields, Set<String> subFields) {
+  private boolean containsField(final String fieldAlias, final Set<String> originalFields,
+          final Set<String> subFields) {
     final boolean containsAlias = originalFields.contains(fieldAlias);
     final Set<String> tmpOriginalField = new HashSet<>(originalFields);
     tmpOriginalField.retainAll(subFields);
@@ -135,7 +133,7 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
    * @param results Partial results from default highlighting and tagged queries highlighting.
    * @return Returns merged results of default highlighting and tagged queries highlighting.
    */
-  private SimpleOrderedMap mergeResults(Map<String, SimpleOrderedMap> results) {
+  private SimpleOrderedMap mergeResults(final Map<String, SimpleOrderedMap> results) {
     final SimpleOrderedMap mergedResult = new SimpleOrderedMap();
     for (Map.Entry<String, SimpleOrderedMap> partialResultEntry : results.entrySet()) {
       for (Object subResultEntryObject : partialResultEntry.getValue()) {
@@ -163,7 +161,8 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
    * @param fieldName Field name (real or virtual/alias)
    * @param fragments All fragments to add
    */
-  private void addFragmentToDoc(SimpleOrderedMap result, String docId, String fieldName, String[] fragments) {
+  private void addFragmentToDoc(final SimpleOrderedMap result, final String docId,
+          final String fieldName, final String[] fragments) {
     Object subResultObject = result.get(docId);
     if (result.get(docId) == null) {
       subResultObject = new SimpleOrderedMap();

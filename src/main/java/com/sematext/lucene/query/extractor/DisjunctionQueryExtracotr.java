@@ -21,16 +21,17 @@ public class DisjunctionQueryExtracotr extends QueryExtractor<DisjunctionMaxQuer
   }
 
   @Override
-  public void extract(DisjunctionMaxQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          List<Query> extractedQueries) throws UnsupportedOperationException {
+  public void extract(final DisjunctionMaxQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
+        final List<Query> extractedQueries) throws UnsupportedOperationException {
     for (Query internalQuery : q) {
       extractQuery(internalQuery, extractors, extractedQueries);
     }
   }
 
   @Override
-  public void extractSubQueriesFields(DisjunctionMaxQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          Set<String> extractedFields) throws UnsupportedOperationException {
+  public void extractSubQueriesFields(final DisjunctionMaxQuery q,
+        final Iterable<QueryExtractor<? extends Query>> extractors,
+        final Set<String> extractedFields) throws UnsupportedOperationException {
     for (Query internalQuery : q) {
       extractFields(internalQuery, extractors, extractedFields);
     }

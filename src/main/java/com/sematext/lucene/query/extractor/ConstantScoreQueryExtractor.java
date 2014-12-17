@@ -22,8 +22,8 @@ public class ConstantScoreQueryExtractor extends QueryExtractor<ConstantScoreQue
   }
 
   @Override
-  public void extract(ConstantScoreQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          List<Query> extractedQueries) throws UnsupportedOperationException {
+  public void extract(final ConstantScoreQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
+          final List<Query> extractedQueries) throws UnsupportedOperationException {
     if (q.getQuery() != null) {
       extractQuery(q.getQuery(), extractors, extractedQueries);
     }
@@ -34,8 +34,9 @@ public class ConstantScoreQueryExtractor extends QueryExtractor<ConstantScoreQue
   }
 
   @Override
-  public void extractSubQueriesFields(ConstantScoreQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          Set<String> extractedFields) throws UnsupportedOperationException {
+  public void extractSubQueriesFields(final ConstantScoreQuery q,
+          final Iterable<QueryExtractor<? extends Query>> extractors,
+          final Set<String> extractedFields) throws UnsupportedOperationException {
     if (q.getQuery() != null) {
       extractFields(q.getQuery(), extractors, extractedFields);
     }

@@ -108,6 +108,7 @@
       <property name="max" value="9"/>
       <property name="id" value="paramNum"/>
     </module>
+    <module name="FinalParameters"/>
     <module name="ParenPad"/>
     <module name="TypecastParenPad"/>
     <module name="RedundantImport"/>

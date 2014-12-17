@@ -20,14 +20,16 @@ public class PhraseQueryExtractor extends QueryExtractor<PhraseQuery> {
   }
 
   @Override
-  public void extract(PhraseQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          List<Query> extractedQueries) throws UnsupportedOperationException {
+  public void extract(final PhraseQuery q,
+          final Iterable<QueryExtractor<? extends Query>> extractors,
+          final List<Query> extractedQueries) throws UnsupportedOperationException {
     extractedQueries.add(q);
   }
 
   @Override
-  public void extractSubQueriesFields(PhraseQuery q, Iterable<QueryExtractor<? extends Query>> extractors,
-          Set<String> extractedFields) throws UnsupportedOperationException {
+  public void extractSubQueriesFields(final PhraseQuery q,
+          final Iterable<QueryExtractor<? extends Query>> extractors,
+          final Set<String> extractedFields) throws UnsupportedOperationException {
     for (Term term : q.getTerms()) {
       extractedFields.add(term.field());
     }
