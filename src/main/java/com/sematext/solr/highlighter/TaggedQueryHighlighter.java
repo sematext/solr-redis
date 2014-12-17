@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
 
-  private static Logger log = LoggerFactory.getLogger(TaggedQueryHighlighter.class);
+  private static Logger logger = LoggerFactory.getLogger(TaggedQueryHighlighter.class);
 
   private static final String MAIN_HIGHLIGHT = "##default##";
 
@@ -51,14 +51,14 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
         }
       }
     } catch (UnsupportedOperationException ex) {
-      log.warn("Cannot highlight query.", ex);
+      logger.warn("Cannot highlight query.", ex);
     }
 
     if (taggedQueries.isEmpty()) {
-      log.debug("Running default highlighter. No tagged queries are used in main query.");
+      logger.debug("Running default highlighter. No tagged queries are used in main query.");
       return super.doHighlighting(docs, query, req, defaultFields);
     } else {
-      log.debug("Collecting highlights for Running default highlighter. No tagged queries are used in main query.");
+      logger.debug("Collecting highlights for Running default highlighter. No tagged queries are used in main query.");
       Map<String, SimpleOrderedMap> results = new HashMap<>();
       results.put(MAIN_HIGHLIGHT, (SimpleOrderedMap) super.doHighlighting(docs, query, req, defaultFields));
 
@@ -103,7 +103,7 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
     for (Map.Entry<String, SimpleOrderedMap> partialResultEntry : results.entrySet()) {
       for (Object subResultEntryObject : partialResultEntry.getValue()) {
         Map.Entry<String, Object> subResultEntry = (Map.Entry<String, Object>) subResultEntryObject;
-        for (Object docEntryObject : (NamedList) subResultEntry.getValue()) {
+        for (Object docEntryObject : (Iterable<? extends Object>) subResultEntry.getValue()) {
           Map.Entry<String, Object> docEntry = (Map.Entry<String, Object>) docEntryObject;
           String fieldName = partialResultEntry.getKey();
           //If results are from main highlight we should add original field name. In other case we should use
@@ -125,7 +125,7 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
       result.add(docId, subResultObject);
     }
     SimpleOrderedMap subResult = (SimpleOrderedMap) subResultObject;
-    List<String> fieldResult = null;
+    List<String> fieldResult;
     if (subResult.get(fieldName) == null) {
       fieldResult = new ArrayList<>();
       subResult.add(fieldName, fieldResult);
