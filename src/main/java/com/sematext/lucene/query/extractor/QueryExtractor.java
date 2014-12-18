@@ -18,7 +18,7 @@ public abstract class QueryExtractor<T extends Query> {
    */
   private static final ImmutableList<QueryExtractor<? extends Query>> DEFAULT_EXTRACTORS = ImmutableList.of(
       new BooleanQueryExtractor(),
-      new DisjunctionQueryExtracotr(),
+      new DisjunctionQueryExtractor(),
       new ConstantScoreQueryExtractor(),
       new FilteredQueryExtractor(),
       new PhraseQueryExtractor(),
@@ -89,7 +89,7 @@ public abstract class QueryExtractor<T extends Query> {
    */
   public static void extractQuery(final Query query, final Iterable<QueryExtractor<? extends Query>> extractors,
       final List<Query> extractedQueries) throws UnsupportedOperationException {
-    for (QueryExtractor extractor : extractors) {
+    for (final QueryExtractor extractor : extractors) {
       if (extractor.cls.isAssignableFrom(query.getClass())) {
         extractor.extract(query, extractors, extractedQueries);
         return;
@@ -122,7 +122,7 @@ public abstract class QueryExtractor<T extends Query> {
    */
   public static void extractFields(final Query query, final Iterable<QueryExtractor<? extends Query>> extractors,
       final Set<String> extractedFields) throws UnsupportedOperationException {
-    for (QueryExtractor extractor : extractors) {
+    for (final QueryExtractor extractor : extractors) {
       if (extractor.getCls().isAssignableFrom(query.getClass())) {
         extractor.extractSubQueriesFields(query, extractors, extractedFields);
         return;

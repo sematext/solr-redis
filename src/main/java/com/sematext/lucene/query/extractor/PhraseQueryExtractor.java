@@ -30,7 +30,7 @@ public class PhraseQueryExtractor extends QueryExtractor<PhraseQuery> {
   public void extractSubQueriesFields(final PhraseQuery q,
           final Iterable<QueryExtractor<? extends Query>> extractors,
           final Set<String> extractedFields) throws UnsupportedOperationException {
-    for (Term term : q.getTerms()) {
+    for (final Term term : q.getTerms()) {
       extractedFields.add(term.field());
     }
   }

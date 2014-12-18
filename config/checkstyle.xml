@@ -27,6 +27,7 @@
     <property name="minimum" value="0"/>
     <property name="maximum" value="0"/>
   </module>
+  <module name="StrictDuplicateCode"/>
 
   <module name="TreeWalker">
     <property name="tabWidth" value="2"/>
@@ -37,7 +38,7 @@
     <module name="EqualsHashCode"/>
     <module name="OneStatementPerLine"/>
 
-    <!-- module name="IllegalCatch"/ -->
+    <module name="IllegalCatch"/>
     <module name="IllegalImport"/>
     <module name="IllegalInstantiation"/>
     <module name="IllegalThrows"/>
@@ -104,11 +105,14 @@
       <property name="option" value="eol"/>
     </module>
     <module name="PackageName"/>
+    <module name="PackageDeclaration"/>
     <module name="ParameterNumber">
       <property name="max" value="9"/>
       <property name="id" value="paramNum"/>
     </module>
-    <module name="FinalParameters"/>
+    <module name="FinalParameters">
+      <property name="tokens" value="METHOD_DEF, CTOR_DEF, LITERAL_CATCH"/>
+    </module>
     <module name="ParenPad"/>
     <module name="TypecastParenPad"/>
     <module name="RedundantImport"/>
@@ -130,7 +134,9 @@
       <property name="caseIndent" value="0"/>
     </module>
     <module name="ArrayTrailingComma"/>
-    <module name="FinalLocalVariable"/>
+    <module name="FinalLocalVariable">
+      <property name="tokens" value="VARIABLE_DEF,PARAMETER_DEF"/>
+    </module>
     <module name="EqualsAvoidNull"/>
     <module name="ParameterAssignment"/>
 
@@ -156,5 +162,9 @@
     <module name="SuppressWarnings"/>
     <module name="OuterTypeFilename"/>
     <module name="HideUtilityClassConstructor"/>
+    <module name="ModifiedControlVariable"/>
+    <module name="StringLiteralEquality"/>
+    <module name="DeclarationOrder"/>
+    <module name="UnnecessaryParentheses"/>
   </module>
 </module>

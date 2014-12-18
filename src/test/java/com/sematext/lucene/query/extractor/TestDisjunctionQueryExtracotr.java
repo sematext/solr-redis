@@ -15,7 +15,7 @@ public class TestDisjunctionQueryExtracotr extends TestQueryExtractor {
     Query q1 = mock(Query.class);
     Query q2 = mock(Query.class);
 
-    DisjunctionQueryExtracotr disjunctionQueryExtracotr = new DisjunctionQueryExtracotr();
+    DisjunctionQueryExtractor disjunctionQueryExtracotr = new DisjunctionQueryExtractor();
 
     DisjunctionMaxQuery disjunctionMaxQuery = new DisjunctionMaxQuery(0.0f);
     disjunctionMaxQuery.add(q1);

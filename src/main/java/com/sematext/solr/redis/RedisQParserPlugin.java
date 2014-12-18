@@ -25,14 +25,14 @@ import redis.clients.jedis.Protocol;
 public class RedisQParserPlugin extends QParserPlugin {
 
   /**
-   * Logger
-   */
-  private static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
-
-  /**
    * Redis parameter name constant.
    */
   public static final String NAME = "redis";
+
+  /**
+   * Logger
+   */
+  private static final Logger log = LoggerFactory.getLogger(RedisQParserPlugin.class);
 
   /**
    * Host name parameter name constant
