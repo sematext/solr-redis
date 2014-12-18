@@ -87,8 +87,12 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
       final Map<String, SimpleOrderedMap> results = new HashMap<>();
       results.put(MAIN_HIGHLIGHT, (SimpleOrderedMap) super.doHighlighting(docs, query, req, defaultFields));
 
-      final Set<String> originalFields = new HashSet<>(
-              Arrays.asList(SolrPluginUtils.split(req.getParams().getParams(HighlightParams.FIELDS)[0])));
+      List<String> fieldsNameList = new ArrayList<>();
+      if (req.getParams().getParams(HighlightParams.FIELDS).length > 0) {
+        fieldsNameList = Arrays.asList(SolrPluginUtils.split(req.getParams().getParams(HighlightParams.FIELDS)[0]));
+      }
+
+      final Set<String> originalFields = new HashSet<>(fieldsNameList);
       for (final TaggedQuery taggedQuery : taggedQueries) {
         final Set<String> fields = new HashSet<>();
         QueryExtractor.extractFields(taggedQuery, fields);
