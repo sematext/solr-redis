@@ -24,8 +24,8 @@ public class BooleanQueryExtractor extends QueryExtractor<BooleanQuery> {
   public void extract(final BooleanQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
           final List<Query> extractedQueries) throws UnsupportedOperationException {
     final BooleanClause[] clauses = q.getClauses();
-    for (int i = 0; i < clauses.length; ++i) {
-      extractQuery(clauses[i].getQuery(), extractors, extractedQueries);
+    for (final BooleanClause clause : clauses) {
+      extractQuery(clause.getQuery(), extractors, extractedQueries);
     }
   }
 
@@ -33,8 +33,8 @@ public class BooleanQueryExtractor extends QueryExtractor<BooleanQuery> {
   public void extractSubQueriesFields(final BooleanQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
       final Set<String> extractedFields) throws UnsupportedOperationException {
     final BooleanClause[] clauses = q.getClauses();
-    for (int i = 0; i < clauses.length; ++i) {
-      extractFields(clauses[i].getQuery(), extractors, extractedFields);
+    for (final BooleanClause clause : clauses) {
+      extractFields(clause.getQuery(), extractors, extractedFields);
     }
   }
 

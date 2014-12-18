@@ -229,11 +229,7 @@ final class RedisQParser extends QParser {
 
     log.debug("Prepared a query for field {} with {} boolean clauses", fieldName, booleanClausesTotal);
 
-    if (fieldAlias == null || fieldAlias.isEmpty()) {
-      return booleanQuery;
-    } else {
-      return new TaggedQuery(booleanQuery, fieldAlias);
-    }
+    return fieldAlias == null || fieldAlias.isEmpty() ? booleanQuery : new TaggedQuery(booleanQuery, fieldAlias);
   }
 
   /**

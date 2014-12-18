@@ -5,6 +5,7 @@ import com.sematext.lucene.query.extractor.QueryExtractor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,10 +37,10 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
   /**
    * Logger instance
    */
-  private static Logger logger = LoggerFactory.getLogger(TaggedQueryHighlighter.class);
+  private static final Logger logger = LoggerFactory.getLogger(TaggedQueryHighlighter.class);
 
   /**
-   * Mgic  constant which means the default highlight field  (not taged/virtual fields)
+   * Mgic  constant which means the default highlight field  (not tagged/virtual fields)
    */
   private static final String MAIN_HIGHLIGHT = "##default##";
 
@@ -64,17 +65,17 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
           final SolrQueryRequest req, final String[] defaultFields)
       throws IOException {
 
-    final List<TaggedQuery> taggedQueries = new ArrayList<>();
+    final Collection<TaggedQuery> taggedQueries = new ArrayList<>();
     final List<Query> otherQueries = new ArrayList<>();
     try {
       final List<Query> extractedQueries = new ArrayList<>();
       QueryExtractor.extractQuery(query, extractedQueries);
-      for (Query extractedQuery : extractedQueries) {
+      for (final Query extractedQuery : extractedQueries) {
         if (extractedQuery instanceof TaggedQuery) {
           taggedQueries.add((TaggedQuery) extractedQuery);
         }
       }
-    } catch (UnsupportedOperationException ex) {
+    } catch (final UnsupportedOperationException ex) {
       logger.warn("Cannot highlight query.", ex);
     }
 
@@ -88,7 +89,7 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
 
       final Set<String> originalFields = new HashSet<>(
               Arrays.asList(SolrPluginUtils.split(req.getParams().getParams(HighlightParams.FIELDS)[0])));
-      for (TaggedQuery taggedQuery : taggedQueries) {
+      for (final TaggedQuery taggedQuery : taggedQueries) {
         final Set<String> fields = new HashSet<>();
         QueryExtractor.extractFields(taggedQuery, fields);
         final ModifiableSolrParams params = new ModifiableSolrParams(req.getParams());
@@ -119,12 +120,12 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
    * @return Returns true if field should be highlighted and false otherwise.
    */
   private boolean containsField(final String fieldAlias, final Set<String> originalFields,
-          final Set<String> subFields) {
+          final Collection<String> subFields) {
     final boolean containsAlias = originalFields.contains(fieldAlias);
-    final Set<String> tmpOriginalField = new HashSet<>(originalFields);
+    final Collection<String> tmpOriginalField = new HashSet<>(originalFields);
+    final boolean containsSubfields = !tmpOriginalField.isEmpty();
     tmpOriginalField.retainAll(subFields);
-    final boolean containsSubfields = (tmpOriginalField.size() > 0);
-    return (containsAlias || containsSubfields);
+    return containsAlias || containsSubfields;
   }
 
   /**
@@ -135,10 +136,10 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
    */
   private SimpleOrderedMap mergeResults(final Map<String, SimpleOrderedMap> results) {
     final SimpleOrderedMap mergedResult = new SimpleOrderedMap();
-    for (Map.Entry<String, SimpleOrderedMap> partialResultEntry : results.entrySet()) {
-      for (Object subResultEntryObject : partialResultEntry.getValue()) {
+    for (final Map.Entry<String, SimpleOrderedMap> partialResultEntry : results.entrySet()) {
+      for (final Object subResultEntryObject : partialResultEntry.getValue()) {
         final Map.Entry<String, Object> subResultEntry = (Map.Entry<String, Object>) subResultEntryObject;
-        for (Object docEntryObject : (Iterable<? extends Object>) subResultEntry.getValue()) {
+        for (final Object docEntryObject : (Iterable<? extends Object>) subResultEntry.getValue()) {
           final Map.Entry<String, Object> docEntry = (Map.Entry<String, Object>) docEntryObject;
           String fieldName = partialResultEntry.getKey();
           //If results are from main highlight we should add original field name. In other case we should use

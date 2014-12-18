@@ -11,12 +11,12 @@ import org.apache.lucene.search.Query;
  *
  * @author prog
  */
-public class DisjunctionQueryExtracotr extends QueryExtractor<DisjunctionMaxQuery> {
+public class DisjunctionQueryExtractor extends QueryExtractor<DisjunctionMaxQuery> {
 
   /**
    * Default constructor. It only uses super class constructor giving as an argument query class.
    */
-  public DisjunctionQueryExtracotr() {
+  public DisjunctionQueryExtractor() {
     super(DisjunctionMaxQuery.class);
   }
 
@@ -32,7 +32,7 @@ public class DisjunctionQueryExtracotr extends QueryExtractor<DisjunctionMaxQuer
   public void extractSubQueriesFields(final DisjunctionMaxQuery q,
         final Iterable<QueryExtractor<? extends Query>> extractors,
         final Set<String> extractedFields) throws UnsupportedOperationException {
-    for (Query internalQuery : q) {
+    for (final Query internalQuery : q) {
       extractFields(internalQuery, extractors, extractedFields);
     }
   }

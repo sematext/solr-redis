@@ -50,11 +50,7 @@ public class TaggedQuery extends Query {
 
   @Override
   public String toString(final String field) {
-    final StringBuilder builder = new StringBuilder();
-    builder.append("TaggedQuery [");
-    builder.append(wrappedQuery.toString());
-    builder.append("]");
-    return builder.toString();
+    return "TaggedQuery [" + wrappedQuery + "]";
   }
 
   @Override
@@ -74,13 +70,7 @@ public class TaggedQuery extends Query {
       return false;
     }
     final TaggedQuery other = (TaggedQuery) obj;
-    if (!Objects.equals(this.wrappedQuery, other.wrappedQuery)) {
-      return false;
-    }
-    if (!Objects.equals(this.tag, other.tag)) {
-      return false;
-    }
-    return true;
+    return Objects.equals(this.wrappedQuery, other.wrappedQuery) && Objects.equals(this.tag, other.tag);
   }
 
 }
