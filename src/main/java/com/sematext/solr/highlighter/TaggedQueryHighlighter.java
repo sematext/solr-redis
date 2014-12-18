@@ -127,9 +127,8 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
           final Collection<String> subFields) {
     final boolean containsTag = originalFields.contains(queryTag);
     final Collection<String> tmpOriginalField = new HashSet<>(originalFields);
-    final boolean containsSubfields = !tmpOriginalField.isEmpty();
     tmpOriginalField.retainAll(subFields);
-    return containsTag || containsSubfields;
+    return containsTag || !tmpOriginalField.isEmpty();
   }
 
   /**

@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<config>
+    <luceneMatchVersion>${tests.luceneMatchVersion:LUCENE_CURRENT}</luceneMatchVersion>
+    <dataDir>${solr.data.dir:}</dataDir>
+    <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
+
+    <queryResponseWriter name="xml" default="true" class="solr.XMLResponseWriter" />
+    <requestHandler name="/select" class="solr.SearchHandler" />
+    <requestHandler name="/update" class="solr.UpdateRequestHandler"  />
+
+    <queryParser name="redis" class="com.sematext.solr.redis.RedisQParserPlugin">
+        <str name="host">localhost</str>
+    </queryParser>
+
+    <searchComponent class="solr.HighlightComponent" name="highlight">
+        <highlighting class="com.sematext.solr.highlighter.TaggedQueryHighlighter"/>
+    </searchComponent>
+</config>
