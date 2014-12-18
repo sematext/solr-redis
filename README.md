@@ -145,11 +145,11 @@ fields due to issued in Lucene/Solr
 
 
 ```
-curl 'http://localhost:8983/solr/collection1/select?q={!redis command=SMEMBERS key=testKey field_alias=highlightedField}test_field&hl=true&hl.fl=highlightedField}'
+curl 'http://localhost:8983/solr/collection1/select?q={!redis command=SMEMBERS key=testKey tag=highlightedField}test_field&hl=true&hl.fl=highlightedField}'
 ```
 
-**Please note** that field used in `field_alias` parameter of SolrRedis QParser doesn't
-have to exist in schema. It is only virtual (alias) field. This is only used to identify
+**Please note** that field used in `tag` parameter of SolrRedis QParser doesn't
+have to exist in schema. It is only virtual (tag) field. This is only used to identify
 matches of which query should be highlighted.
 
 ### Response
@@ -167,7 +167,7 @@ Example of response:
     <int name="QTime">10</int>
     <lst name="params">
       <str name="q">
-        {!redis command=SMEMBERS key=testKey field_alias=highlightedField}test_field
+        {!redis command=SMEMBERS key=testKey tag=highlightedField}test_field
       </str>
       <str name="hl.fl">highlightedField</str>
       <str name="hl">true</str>
@@ -194,8 +194,8 @@ Example of response:
 
 ```
 curl 'http://localhost:8983/solr/collection1/select?q= \
-({!redis command=SMEMBERS key=testKey1 field_alias=alias1}test_field) OR\
-({!redis command=SMEMBERS key=testKey2 field_alias=alias2}test_field)\
+({!redis command=SMEMBERS key=testKey1 tag=alias1}test_field) OR\
+({!redis command=SMEMBERS key=testKey2 tag=alias2}test_field)\
 &hl=true&hl.fl=alias1,alias2}
 ```
 
@@ -205,7 +205,7 @@ You can also mix SolrRedis highlighting with default Solr highlighting:
 
 ```
 curl 'http://localhost:8983/solr/collection1/select?q=
-({!redis command=SMEMBERS key=testKey1 field_alias=alias1}test_field) OR (foo:bar) &hl=true&hl.fl=alias1,foo}
+({!redis command=SMEMBERS key=testKey1 tag=alias1}test_field) OR (foo:bar) &hl=true&hl.fl=alias1,foo}
 ```
 
 Response will be as below
@@ -217,7 +217,7 @@ Response will be as below
     <int name="QTime">10</int>
     <lst name="params">
       <str name="q">
-        {!redis command=SMEMBERS key=testKey1 field_alias=alias1}test_field OR (foo:bar)
+        {!redis command=SMEMBERS key=testKey1 tag=alias1}test_field OR (foo:bar)
       </str>
       <str name="hl.fl">alias1,foo</str>
       <str name="hl">true</str>

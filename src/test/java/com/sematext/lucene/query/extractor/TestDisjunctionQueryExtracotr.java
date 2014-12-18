@@ -40,7 +40,7 @@ public class TestDisjunctionQueryExtracotr extends TestQueryExtractor {
     Query q1 = new TermQuery(new Term("field1", "value1"));
     Query q2 = new TermQuery(new Term("field2", "value2"));
 
-    DisjunctionQueryExtracotr disjunctionQueryExtracotr = new DisjunctionQueryExtracotr();
+    DisjunctionQueryExtractor disjunctionQueryExtracotr = new DisjunctionQueryExtractor();
 
     DisjunctionMaxQuery disjunctionMaxQuery = new DisjunctionMaxQuery(0.0f);
     disjunctionMaxQuery.add(q1);

@@ -94,7 +94,7 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
         QueryExtractor.extractFields(taggedQuery, fields);
         final ModifiableSolrParams params = new ModifiableSolrParams(req.getParams());
 
-        //Continue if original field set doesn't contain subfields or field alias
+        //Continue if original field set doesn't contain subfields or field tag
         if (!containsField(taggedQuery.getTag(), originalFields, fields)) {
           continue;
         }
@@ -114,18 +114,18 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
   /**
    * Checks if field should be highlighted.
    *
-   * @param fieldAlias Field alias
+   * @param queryTag Field tag
    * @param originalFields All fields passed in hl.fl parameter
    * @param subFields All fields in inner queries of tagged query
    * @return Returns true if field should be highlighted and false otherwise.
    */
-  private boolean containsField(final String fieldAlias, final Set<String> originalFields,
+  private boolean containsField(final String queryTag, final Set<String> originalFields,
           final Collection<String> subFields) {
-    final boolean containsAlias = originalFields.contains(fieldAlias);
+    final boolean containsTag = originalFields.contains(queryTag);
     final Collection<String> tmpOriginalField = new HashSet<>(originalFields);
     final boolean containsSubfields = !tmpOriginalField.isEmpty();
     tmpOriginalField.retainAll(subFields);
-    return containsAlias || containsSubfields;
+    return containsTag || containsSubfields;
   }
 
   /**

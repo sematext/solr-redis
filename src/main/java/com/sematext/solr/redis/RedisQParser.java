@@ -114,9 +114,9 @@ final class RedisQParser extends QParser {
   private final String redisCommand;
 
   /**
-   * Field alias name - virtual field name. Used for highlighting.
+   * Query tag name - virtual field name. Used for highlighting.
    */
-  private final String fieldAlias;
+  private final String queryTag;
 
   /**
    * Parameters which determines if this QParser should analyze data from Redis.
@@ -157,7 +157,7 @@ final class RedisQParser extends QParser {
 
     redisCommand = localParams.get("command") == null ? null : localParams.get("command").toUpperCase();
     final String operatorString = localParams.get("operator");
-    fieldAlias = localParams.get("field_alias");
+    queryTag = localParams.get("tag");
 
     if (redisCommand == null) {
       log.error("No command argument passed to RedisQParser.");
@@ -229,7 +229,7 @@ final class RedisQParser extends QParser {
 
     log.debug("Prepared a query for field {} with {} boolean clauses", fieldName, booleanClausesTotal);
 
-    return fieldAlias == null || fieldAlias.isEmpty() ? booleanQuery : new TaggedQuery(booleanQuery, fieldAlias);
+    return queryTag == null || queryTag.isEmpty() ? booleanQuery : new TaggedQuery(booleanQuery, queryTag);
   }
 
   /**
