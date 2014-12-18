@@ -8,8 +8,8 @@ import org.apache.lucene.search.Query;
 public class TestQueryExtractor {
 
   public static final ImmutableList<QueryExtractor<? extends Query>> DEFAULT_EXTRACTORS = ImmutableList.of(
-      new FakeExtractor(),
-      new TermQueryExtractor()
+      new TermQueryExtractor(),
+      new FakeExtractor()
   );
 
   private static class FakeExtractor extends QueryExtractor<Query> {
