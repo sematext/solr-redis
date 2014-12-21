@@ -3,7 +3,9 @@ services:
   - redis-server
 script: "mvn test verify -Dskip.integration.tests=false"
 jdk:
+  - openjdk7
   - oraclejdk7
+  - oraclejdk8
 cache:
   directories:
     - $HOME/.m2
