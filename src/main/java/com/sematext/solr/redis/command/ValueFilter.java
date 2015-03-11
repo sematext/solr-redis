@@ -20,14 +20,14 @@ public class ValueFilter {
     final String compression = ParamUtil.tryGetStringByName(params, "compression", "");
     final String serializationForm = ParamUtil.tryGetStringByName(params, "serialization", "");
 
-    return deserialize(serializationForm, decompress(compression, byteValue));
+    return deserialize(serializationForm, inflate(compression, byteValue));
   }
 
-  private static String decompress(final String compression, final byte[] bytes) throws UnsupportedAlgorithmException {
+  private static String inflate(final String compression, final byte[] bytes) throws UnsupportedAlgorithmException {
     if ("".equals(compression)) {
       return new String(bytes);
     } else if ("gzip".equals(compression)) {
-      return decompressGzip(bytes);
+      return inflateGzip(bytes);
     } else {
       throw new UnsupportedAlgorithmException(String.format("Unsupported algorithm: '%s'", compression));
     }
@@ -45,7 +45,7 @@ public class ValueFilter {
     }
   }
 
-  private static String decompressGzip(final byte[] bytes) {
+  private static String inflateGzip(final byte[] bytes) {
     log.debug("Decompressing GZIP data");
 
     try {
