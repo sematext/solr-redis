@@ -399,6 +399,74 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
   }
 
   @Test
+  public void shouldInflateGzipFindSingleDocumentGet() {
+    final String[] doc = {"id", "1", "string_field", "test"};
+    assertU(adoc(doc));
+    assertU(commit());
+
+    jedis.set("test_key".getBytes(), Compressor.compressGzip("test".getBytes()));
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis command=get key=test_key compression=gzip}string_field");
+    assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
+  }
+
+  @Test
+  public void shouldDeserializeJsonFindMultipleDocumentsGet() {
+    final String[] doc1 = {"id", "1", "string_field", "test1"};
+    final String[] doc2 = {"id", "2", "string_field", "test2"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(commit());
+
+    jedis.set("test_key", "['test1','test2']");
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis command=get key=test_key serialization=json}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']");
+  }
+
+  @Test
+  public void shouldInflateGzipAndDeserializeJsonFindMultipleDocumentsGet() {
+    final String[] doc1 = {"id", "1", "string_field", "test1"};
+    final String[] doc2 = {"id", "2", "string_field", "test2"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(commit());
+
+    jedis.set("test_key".getBytes(), Compressor.compressGzip("[\"test1\",\"test2\"]".getBytes()));
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis command=get key=test_key serialization=json compression=gzip}string_field");
+    assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']");
+  }
+
+  @Test
+  public void shouldIgnoreIllegalJsonGet() {
+    jedis.set("test_key".getBytes(), Compressor.compressGzip("[".getBytes()));
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis command=get key=test_key serialization=json}string_field");
+    assertQ(req(params), "*[count(//doc)=0]");
+  }
+
+  @Test
+  public void shouldIgnoreIllegalCompressiomGet() {
+    jedis.set("test_key".getBytes(), "0".getBytes());
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "*:*");
+    params.add("fq", "{!redis command=get key=test_key serialization=json}string_field");
+    assertQ(req(params), "*[count(//doc)=0]");
+  }
+
+  @Test
   public void shouldFindThreeDocumentsMget() {
     final String[] doc1 = {"id", "1", "string_field", "one"};
     final String[] doc2 = {"id", "2", "string_field", "two"};

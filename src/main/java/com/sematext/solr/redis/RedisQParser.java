@@ -19,6 +19,7 @@ import com.sematext.solr.redis.command.SMembers;
 import com.sematext.solr.redis.command.SRandMember;
 import com.sematext.solr.redis.command.SUnion;
 import com.sematext.solr.redis.command.Sort;
+import com.sematext.solr.redis.command.ValueFilter;
 import com.sematext.solr.redis.command.ZRange;
 import com.sematext.solr.redis.command.ZRangeByScore;
 import com.sematext.solr.redis.command.ZRevRange;
@@ -83,7 +84,7 @@ final class RedisQParser extends QParser {
     commands.put("LRANGE", new LRange());
     commands.put("LINDEX", new LIndex());
 
-    commands.put("GET", new Get());
+    commands.put("GET", new Get(new ValueFilter()));
     commands.put("MGET", new MGet());
     commands.put("KEYS", new Keys());
 

@@ -21,12 +21,13 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.SortingParams;
 import redis.clients.jedis.Tuple;
 import redis.clients.jedis.exceptions.JedisConnectionException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
+import java.util.zip.GZIPOutputStream;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -553,7 +554,7 @@ public class TestRedisQParser {
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     redisQParser.parse();
-    verify(jedisMock).get("simpleKey");
+    verify(jedisMock).get("simpleKey".getBytes());
   }
 
   @Test
@@ -561,15 +562,68 @@ public class TestRedisQParser {
     when(localParamsMock.get("command")).thenReturn("get");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.get(anyString())).thenReturn("value");
+    when(jedisMock.get(any(byte[].class))).thenReturn("val".getBytes());
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     final Query query = redisQParser.parse();
-    verify(jedisMock).get("simpleKey");
+    verify(jedisMock).get("simpleKey".getBytes());
     final Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(1, terms.size());
+  }
+
+  @Test
+  public void shouldParseJsonTermsFromRedisOnGetCommand() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("get");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("serialization")).thenReturn("json");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.get(any(byte[].class))).thenReturn("[1,2,3]".getBytes());
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).get("simpleKey".getBytes());
+    final Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(3, terms.size());
+  }
+
+  @Test
+  public void shouldDeflateGzipTermsFromRedisOnGetCommand() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("get");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("compression")).thenReturn("gzip");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.get(any(byte[].class))).thenReturn(Compressor.compressGzip("1".getBytes()));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).get("simpleKey".getBytes());
+    final Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(1, terms.size());
+  }
+
+  @Test
+  public void shouldDeflateGzipAndParseJsonTermsFromRedisOnGetCommand() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("get");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("compression")).thenReturn("gzip");
+    when(localParamsMock.get("serialization")).thenReturn("json");
+
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(jedisMock.get(any(byte[].class))).thenReturn(Compressor.compressGzip("[100,200,300]".getBytes()));
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).get("simpleKey".getBytes());
+    final Set<Term> terms = new HashSet<>();
+    query.extractTerms(terms);
+    Assert.assertEquals(3, terms.size());
   }
 
   @Test
@@ -582,7 +636,7 @@ public class TestRedisQParser {
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, jedisPoolMock);
     final Query query = redisQParser.parse();
-    verify(jedisMock).get("simpleKey");
+    verify(jedisMock).get("simpleKey".getBytes());
     final Set<Term> terms = new HashSet<>();
     query.extractTerms(terms);
     Assert.assertEquals(0, terms.size());
@@ -1286,5 +1340,28 @@ public class TestRedisQParser {
     }
 
     return builder.toString().trim();
+  }
+}
+
+final class Compressor
+{
+  public static byte[] compressGzip(final byte[] input) {
+    final byte[] compressed;
+    try {
+      try (
+          ByteArrayOutputStream output = new ByteArrayOutputStream(input.length);
+      ) {
+        try (
+            GZIPOutputStream stream = new GZIPOutputStream(output);
+        ) {
+          stream.write(input);
+        }
+        compressed = output.toByteArray();
+      }
+
+      return compressed;
+    } catch (final IOException e) {
+      return null;
+    }
   }
 }
