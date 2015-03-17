@@ -39,9 +39,6 @@ import org.apache.solr.search.QueryParsing;
 import org.apache.solr.search.SyntaxError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.exceptions.JedisException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,14 +92,9 @@ final class RedisQParser extends QParser {
   }
 
   /**
-   * Jedis pool object.
+   * Jedis command handler
    */
-  private final JedisPool jedisPool;
-
-  /**
-   * Results of redis command.
-   */
-  private Map<String, Float> results;
+  private final CommandHandler commandHandler;
 
   /**
    * Operator used to build query.
@@ -125,36 +117,17 @@ final class RedisQParser extends QParser {
   private final boolean useQueryTimeAnalyzer;
 
   /**
-   * Parameter which determines how many times Redis operation should be retried before throwing an exception.
-   */
-  private final int maxJedisRetries;
-
-  /**
    *
    * @param qstr Query string
    * @param localParams Local parameters for this query parser
    * @param params Parameters
    * @param req Request object
-   * @param jedisPool Jedis pool which should be used to connect to Redis.
+   * @param commandHandler Redis command handler
    */
   RedisQParser(final String qstr, final SolrParams localParams, final SolrParams params, final SolrQueryRequest req,
-    final JedisPool jedisPool) {
-    this(qstr, localParams, params, req, jedisPool, 0);
-  }
-
-  /**
-   *
-   * @param qstr Query string
-   * @param localParams Local parameters for this query parser
-   * @param params Parameters
-   * @param req Request object
-   * @param jedisPool Jedis pool which should be used to connect to Redis.
-   * @param maxJedisRetries Parameter which determines how many times Redis operation should be retried
-   */
-  RedisQParser(final String qstr, final SolrParams localParams, final SolrParams params, final SolrQueryRequest req,
-          final JedisPool jedisPool, final int maxJedisRetries) {
+          final CommandHandler commandHandler) {
     super(qstr, localParams, params, req);
-    this.jedisPool = jedisPool;
+    this.commandHandler = commandHandler;
 
     redisCommand = localParams.get("command") == null ? null : localParams.get("command").toUpperCase();
     final String operatorString = localParams.get("operator");
@@ -173,8 +146,6 @@ final class RedisQParser extends QParser {
     operator = "AND".equalsIgnoreCase(operatorString) ? BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
 
     useQueryTimeAnalyzer = localParams.getBool("useAnalyzer", true);
-
-    this.maxJedisRetries = maxJedisRetries;
   }
 
   @Override
@@ -183,7 +154,7 @@ final class RedisQParser extends QParser {
     final BooleanQuery booleanQuery = new BooleanQuery(true);
     int booleanClausesTotal = 0;
 
-    fetchDataFromRedis(redisCommand, maxJedisRetries);
+    final Map<String, Float> results = commandHandler.executeCommand(commands.get(redisCommand), localParams);
 
     if (results != null) {
       log.debug("Preparing a query for {} redis objects for field: {}", results.size(), fieldName);
@@ -250,30 +221,5 @@ final class RedisQParser extends QParser {
     }
 
     query.add(termQuery, this.operator);
-  }
-
-  /**
-   *
-   * @param redisCommand Redus command
-   * @param maxRetries Maximum retries of Redis command
-   */
-  private void fetchDataFromRedis(final String redisCommand, final int maxRetries) {
-    int retries = 0;
-    final Command command = commands.get(redisCommand);
-
-    while (results == null && retries++ < maxRetries + 1) {
-      Jedis jedis = null;
-      try {
-        jedis = jedisPool.getResource();
-        results = command.execute(jedis, localParams);
-        jedisPool.returnResource(jedis);
-      } catch (final JedisException ex) {
-        jedisPool.returnBrokenResource(jedis);
-        log.debug("There was an error fetching data from redis. Retrying", ex);
-        if (retries >= maxRetries + 1) {
-          throw ex;
-        }
-      }
-    }
   }
 }

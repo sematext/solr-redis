@@ -9,11 +9,12 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Protocol;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.Matchers.*;
 
@@ -21,8 +22,9 @@ public class TestRedisQParserPlugin {
 
   @Spy
   private final RedisQParserPlugin parserPlugin = new RedisQParserPlugin();
-  private final ArgumentCaptor<GenericObjectPoolConfig> poolArgument = ArgumentCaptor.forClass(GenericObjectPoolConfig.class);
+  private final ArgumentCaptor<GenericObjectPoolConfig> poolConfigArgument = ArgumentCaptor.forClass(GenericObjectPoolConfig.class);
   private final ArgumentCaptor<String> passwordArgument = ArgumentCaptor.forClass(String.class);
+  private final ArgumentCaptor<JedisPool> poolArgument = ArgumentCaptor.forClass(JedisPool.class);
 
   @Before
   public void setUp() {
@@ -43,22 +45,22 @@ public class TestRedisQParserPlugin {
   public void shouldConfigurePoolWithDefaultParametersIfNoSpecificConfigurationIsGiven() {
     parserPlugin.init(new NamedList());
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
     assertNull(passwordArgument.getValue());
-    assertEquals(5, poolArgument.getValue().getMaxTotal());
+    assertEquals(5, poolConfigArgument.getValue().getMaxTotal());
   }
 
   @Test
   public void shouldConfigurePoolWithDefaultParametersIfNullIsGiven() {
     parserPlugin.init(null);
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
     assertNull(passwordArgument.getValue());
-    assertEquals(5, poolArgument.getValue().getMaxTotal());
+    assertEquals(5, poolConfigArgument.getValue().getMaxTotal());
   }
 
   @Test
@@ -67,12 +69,12 @@ public class TestRedisQParserPlugin {
     list.add("host", "127.0.0.1");
     parserPlugin.init(list);
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq("127.0.0.1"),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq("127.0.0.1"),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
+    verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
     assertNull(passwordArgument.getValue());
-    assertEquals(5, poolArgument.getValue().getMaxTotal());
-    assertEquals(1, parserPlugin.getRetries());
+    assertEquals(5, poolConfigArgument.getValue().getMaxTotal());
   }
 
   @Test
@@ -81,12 +83,12 @@ public class TestRedisQParserPlugin {
     list.add("host", "127.0.0.1:1000");
     parserPlugin.init(list);
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq("127.0.0.1"),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq("127.0.0.1"),
         eq(1000), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
+    verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
     assertNull(passwordArgument.getValue());
-    assertEquals(5, poolArgument.getValue().getMaxTotal());
-    assertEquals(1, parserPlugin.getRetries());
+    assertEquals(5, poolConfigArgument.getValue().getMaxTotal());
   }
 
   @Test
@@ -95,11 +97,11 @@ public class TestRedisQParserPlugin {
     list.add("password", "s3cr3t");
     parserPlugin.init(list);
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), eq("s3cr3t"),
         eq(Protocol.DEFAULT_DATABASE));
-    assertEquals(5, poolArgument.getValue().getMaxTotal());
-    assertEquals(1, parserPlugin.getRetries());
+    verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
+    assertEquals(5, poolConfigArgument.getValue().getMaxTotal());
   }
 
   @Test
@@ -108,12 +110,13 @@ public class TestRedisQParserPlugin {
     list.add("database", "1");
     parserPlugin.init(list);
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(1));
+    verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
+
     assertNull(passwordArgument.getValue());
-    assertEquals(5, poolArgument.getValue().getMaxTotal());
-    assertEquals(1, parserPlugin.getRetries());
+    assertEquals(5, poolConfigArgument.getValue().getMaxTotal());
   }
 
   @Test
@@ -122,12 +125,13 @@ public class TestRedisQParserPlugin {
     list.add("timeout", "100");
     parserPlugin.init(list);
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
         eq(Protocol.DEFAULT_PORT), eq(100), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
+    verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
+
     assertNull(passwordArgument.getValue());
-    assertEquals(5, poolArgument.getValue().getMaxTotal());
-    assertEquals(1, parserPlugin.getRetries());
+    assertEquals(5, poolConfigArgument.getValue().getMaxTotal());
   }
 
   @Test
@@ -136,12 +140,13 @@ public class TestRedisQParserPlugin {
     list.add("retries", "100");
     parserPlugin.init(list);
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
+    verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(100));
+
     assertNull(passwordArgument.getValue());
-    assertEquals(5, poolArgument.getValue().getMaxTotal());
-    assertEquals(100, parserPlugin.getRetries());
+    assertEquals(5, poolConfigArgument.getValue().getMaxTotal());
   }
 
   @Test
@@ -150,11 +155,12 @@ public class TestRedisQParserPlugin {
     list.add("maxConnections", "100");
     parserPlugin.init(list);
 
-    Mockito.verify(parserPlugin).createPool(poolArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
+    verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
+
     assertNull(passwordArgument.getValue());
-    assertEquals(100, poolArgument.getValue().getMaxTotal());
-    assertEquals(1, parserPlugin.getRetries());
+    assertEquals(100, poolConfigArgument.getValue().getMaxTotal());
   }
 }
