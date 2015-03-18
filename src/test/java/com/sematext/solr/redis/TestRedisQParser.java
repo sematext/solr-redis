@@ -1276,7 +1276,7 @@ public class TestRedisQParser {
   public void shouldTurnAnalysisOn() throws SyntaxError {
     when(localParamsMock.get("command")).thenReturn("smembers");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
-    when(localParamsMock.getBool("useAnalyzer", true)).thenReturn(true);
+    when(localParamsMock.getBool("useAnalyzer", false)).thenReturn(true);
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new WhitespaceAnalyzer(Version.LUCENE_48));
@@ -1293,7 +1293,7 @@ public class TestRedisQParser {
   public void shouldRetryWhenRedisFailed() throws SyntaxError {
     when(localParamsMock.get("command")).thenReturn("smembers");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
-    when(localParamsMock.getBool("useAnalyzer", true)).thenReturn(false);
+    when(localParamsMock.getBool("useAnalyzer", false)).thenReturn(false);
     when(localParamsMock.get("retries")).thenReturn("2");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(requestMock.getSchema()).thenReturn(schema);

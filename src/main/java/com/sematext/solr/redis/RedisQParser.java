@@ -145,7 +145,7 @@ final class RedisQParser extends QParser {
 
     operator = "AND".equalsIgnoreCase(operatorString) ? BooleanClause.Occur.MUST : BooleanClause.Occur.SHOULD;
 
-    useQueryTimeAnalyzer = localParams.getBool("useAnalyzer", true);
+    useQueryTimeAnalyzer = localParams.getBool("useAnalyzer", false);
   }
 
   @Override

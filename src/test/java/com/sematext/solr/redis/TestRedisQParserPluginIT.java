@@ -1050,29 +1050,33 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
   @Test
   public void shouldReturnSingleDocumentOnEvalWithInteger() {
     String hash;
-    final String[] doc = {"id", "1", "int_field", "100"};
-    assertU(adoc(doc));
+    final String[] doc1 = {"id", "1", "int_field", "100"};
+    final String[] doc2 = {"id", "2", "int_field", "200"};
+    final String[] doc3 = {"id", "2", "int_field", "300"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
     assertU(commit());
 
     final ModifiableSolrParams params = new ModifiableSolrParams();
     params.set("q", "*:*");
 
-    params.set("fq", "{!redis command=eval script='return KEYS[1] + 0;' key=100}int_field");
+    params.set("fq", "{!redis command=eval script='return KEYS[1] + 0;' key=100 useAnalyzer=true}int_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
     hash = sha1("return KEYS[1] + 0;");
-    params.set("fq", "{!redis command=evalsha sha1=" + hash + " key=100}int_field");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " key=100 useAnalyzer=true}int_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
 
-    params.set("fq", "{!redis command=eval script='return ARGV[1] + 0;' arg=100}int_field");
+    params.set("fq", "{!redis command=eval script='return ARGV[1] + 0;' arg=100 useAnalyzer=true}int_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
     hash = sha1("return ARGV[1] + 0;");
-    params.set("fq", "{!redis command=evalsha sha1=" + hash + " arg=100}int_field");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " arg=100 useAnalyzer=true}int_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
 
-    params.set("fq", "{!redis command=eval script='return 100;'}int_field");
+    params.set("fq", "{!redis command=eval script='return 100;' useAnalyzer=true}int_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
     hash = sha1("return 100;");
-    params.set("fq", "{!redis command=evalsha sha1=" + hash + "}int_field");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " useAnalyzer=true}int_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
   }
 
@@ -1086,22 +1090,22 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     final ModifiableSolrParams params = new ModifiableSolrParams();
     params.set("q", "*:*");
 
-    params.set("fq", "{!redis command=eval script='return KEYS[1];' key=1.123}double_field");
+    params.set("fq", "{!redis command=eval script='return KEYS[1];' key=1.123 useAnalyzer=true}double_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
     hash = sha1("return KEYS[1];");
-    params.set("fq", "{!redis command=evalsha sha1=" + hash + " key=1.123}double_field");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " key=1.123 useAnalyzer=true}double_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
 
-    params.set("fq", "{!redis command=eval script='return ARGV[1];' arg=1.123}double_field");
+    params.set("fq", "{!redis command=eval script='return ARGV[1];' arg=1.123 useAnalyzer=true}double_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
     hash = sha1("return ARGV[1];");
-    params.set("fq", "{!redis command=evalsha sha1=" + hash + " arg=1.123}double_field");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " arg=1.123 useAnalyzer=true}double_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
 
-    params.set("fq", "{!redis command=eval script='return \\'1.123\\';'}double_field");
+    params.set("fq", "{!redis command=eval script='return \\'1.123\\';' useAnalyzer=true}double_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
     hash = sha1("return '1.123';");
-    params.set("fq", "{!redis command=evalsha sha1=" + hash + "}double_field");
+    params.set("fq", "{!redis command=evalsha sha1=" + hash + " useAnalyzer=true}double_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
   }
 
