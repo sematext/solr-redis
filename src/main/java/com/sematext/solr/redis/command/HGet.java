@@ -4,7 +4,7 @@ import org.apache.solr.common.params.SolrParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisCommands;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 
 public final class HGet implements Command<JedisCommands> {
@@ -17,6 +17,6 @@ public final class HGet implements Command<JedisCommands> {
 
     log.debug("Fetching HGET from Redis for key: {} ({})", key, field);
 
-    return ResultUtil.stringIteratorToMap(Arrays.asList(client.hget(key, field)));
+    return ResultUtil.stringIteratorToMap(Collections.singletonList(client.hget(key, field)));
   }
 }

@@ -3,6 +3,7 @@ package com.sematext.solr.redis.command;
 import org.apache.solr.common.params.SolrParams;
 import redis.clients.jedis.ScriptingCommands;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,7 +42,7 @@ abstract class ScriptingCommand implements Command<ScriptingCommands> {
   }
 
   private Map<String, Float> returnScalar(final Object result) {
-    return ResultUtil.stringIteratorToMap(Arrays.asList(result.toString()));
+    return ResultUtil.stringIteratorToMap(Collections.singletonList(result.toString()));
   }
 
   private Map<String, Float> returnList(final Iterable<String> result) {

@@ -37,6 +37,10 @@ Configure the query parser plugin in `solrconfig.xml`. Add the following to the 
  * **operator** - Operator which connects terms taken from Redis. Allowed values are AND/OR (optional - default is OR)
  * **useAnalyzer** - Turns on and off query time analyzer true/false (optional - default is true)
 
+GET specific parameters:
+ * **compression**: Defines a format for compression. `gzip` is the only supported option right now
+ * **serialization**: Defines an format for deserialization. `json` is the only supported option right now and assumes to unpack the JSON payload as a list of strings
+
 SRANDMEMBER specific parameters:
  * **count** - Number of random keys to retrieve (default `1`)
 
