@@ -1,6 +1,5 @@
 package com.sematext.solr.redis;
 
-import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
@@ -75,19 +74,14 @@ public class RedisQParserPlugin extends QParserPlugin {
   private static final int DEFAULT_RETRIES = 1;
 
   /**
-   * Redis connection pool object
+   * Jedis connection handler
    */
-  private JedisPool jedisConnectorPool;
-
-  /**
-   * Number of retries property
-   */
-  private int retries = DEFAULT_RETRIES;
+  private CommandHandler connectionHandler;
 
   @Override
   public QParser createParser(final String qstr, final SolrParams localParams, final SolrParams params,
     final SolrQueryRequest req) {
-    return new RedisQParser(qstr, localParams, params, req, jedisConnectorPool, retries);
+    return new RedisQParser(qstr, localParams, params, req, connectionHandler);
   }
 
   @Override
@@ -99,18 +93,16 @@ public class RedisQParserPlugin extends QParserPlugin {
     final int timeout = getInt(args, TIMEOUT_FIELD, Protocol.DEFAULT_TIMEOUT);
     final String password = getString(args, PASSWORD_FIELD, null);
     final int database = getInt(args, DATABASE_FIELD, Protocol.DEFAULT_DATABASE);
-    retries = getInt(args, RETRIES_FIELD, DEFAULT_RETRIES);
+    final int retries = getInt(args, RETRIES_FIELD, DEFAULT_RETRIES);
 
-    log.info("Initializing RedisQParserPlugin with host: " + host);
     final String[] hostAndPort = host.split(":");
-    jedisConnectorPool = createPool(poolConfig, hostAndPort[0],
+    final JedisPool jedisConnectionPool = createPool(poolConfig, hostAndPort[0],
         hostAndPort.length == 2 ? Integer.parseInt(hostAndPort[1]) : Protocol.DEFAULT_PORT, timeout, password,
         database);
-  }
 
-  @VisibleForTesting
-  public int getRetries() {
-    return retries;
+    connectionHandler = createCommandHandler(jedisConnectionPool, retries);
+
+    log.info("Initialized RedisQParserPlugin with host: " + host);
   }
 
   /**
@@ -127,6 +119,17 @@ public class RedisQParserPlugin extends QParserPlugin {
   JedisPool createPool(final GenericObjectPoolConfig poolConfig, final String host, final int port, final int timeout,
     final String password, final int database) {
     return new JedisPool(poolConfig, host, port, timeout, password, database);
+  }
+
+  /**
+   * Create a new command handler
+   *
+   * @param connectionPool Redis connection pool
+   * @param retries How often should a failed operation be retried
+   * @return Relevant command handler
+   */
+  CommandHandler createCommandHandler(final JedisPool connectionPool, final int retries) {
+    return new RetryingCommandHandler(connectionPool, retries);
   }
 
   /**
