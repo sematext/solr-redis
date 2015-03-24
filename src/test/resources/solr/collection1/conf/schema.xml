@@ -34,12 +34,14 @@
   <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
   <fieldType name="double" class="solr.TrieDoubleField" sortMissingLast="true" omitNorms="true"/>
   <fieldType name="int" class="solr.TrieIntField" sortMissingLast="true" omitNorms="true"/>
+  <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType" units="degrees" geo="true" />
 
   <field name="_version_" type="string"/>
   <field name="id" type="string" required="true"/>
   <field name="string_field" type="string"/>
   <field name="double_field" type="double"/>
   <field name="int_field" type="int"/>
+  <field name="location" type="location_rpt" />
 
   <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field

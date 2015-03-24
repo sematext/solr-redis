@@ -26,10 +26,8 @@ public class ConstantScoreQueryExtractor extends QueryExtractor<ConstantScoreQue
           final List<Query> extractedQueries) throws UnsupportedOperationException {
     if (q.getQuery() != null) {
       extractQuery(q.getQuery(), extractors, extractedQueries);
-    }
-    else
-    {
-      extractQuery(q, extractors, extractedQueries);
+    } else {
+      extractedQueries.add(q);
     }
   }
 

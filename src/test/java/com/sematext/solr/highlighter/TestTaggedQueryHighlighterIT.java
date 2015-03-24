@@ -164,4 +164,17 @@ public class TestTaggedQueryHighlighterIT extends SolrTestCaseJ4 {
             "count(//lst[@name='highlighting']/*)=1",
             "//lst[@name='highlighting']/lst[@name='1']/arr[@name='test_tag1']/str='<em>test1</em>'");
   }
+
+  @Test
+  public void testConstantScoreQueryWithFilterPartOnly() {
+    final String[] doc1 = {"id", "1", "location", "56.9485,24.0980"};
+    assertU(adoc(doc1));
+    assertU(commit());
+
+    ModifiableSolrParams params = new ModifiableSolrParams();
+    params.add("q", "{!geofilt sfield=\"location\" pt=\"56.9484,24.0981\" d=100}");
+    params.add("hl", "true");
+    params.add("hl.fl", "location");
+    assertQ(req(params), "*[count(//doc)=1]", "count(//lst[@name='highlighting']/*)=1");
+  }
 }
