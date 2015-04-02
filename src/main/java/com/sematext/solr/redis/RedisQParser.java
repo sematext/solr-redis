@@ -169,7 +169,6 @@ final class RedisQParser extends QParser {
           final Float score = entry.getValue();
 
           if (useQueryTimeAnalyzer) {
-
             log.trace("Term string {}", termString);
 
             try (final TokenStream tokenStream =
@@ -199,7 +198,8 @@ final class RedisQParser extends QParser {
       }
     }
 
-    log.debug("Prepared a query for field {} with {} boolean clauses", fieldName, booleanClausesTotal);
+    log.debug("Prepared a query for field {} with {} boolean clauses. (request params: {}}", fieldName,
+        booleanClausesTotal, req.getParamString());
 
     return queryTag == null || queryTag.isEmpty() ? booleanQuery : new TaggedQuery(booleanQuery, queryTag);
   }
