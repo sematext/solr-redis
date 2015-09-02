@@ -3,6 +3,7 @@ package com.sematext.lucene.query.extractor;
 import java.util.List;
 import java.util.Set;
 import org.apache.lucene.search.ConstantScoreQuery;
+import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 
 /**
@@ -24,7 +25,7 @@ public class ConstantScoreQueryExtractor extends QueryExtractor<ConstantScoreQue
   @Override
   public void extract(final ConstantScoreQuery q, final Iterable<QueryExtractor<? extends Query>> extractors,
           final List<Query> extractedQueries) throws UnsupportedOperationException {
-    if (q.getQuery() != null) {
+    if (q.getQuery() != null && !(q.getQuery() instanceof Filter)) {
       extractQuery(q.getQuery(), extractors, extractedQueries);
     } else {
       extractedQueries.add(q);
