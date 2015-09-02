@@ -9,8 +9,11 @@ import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.mockito.Mockito.mock;
 
@@ -41,7 +44,7 @@ public class TestConstantScoreQueryExtractor extends TestQueryExtractor {
 
     constantScoreQueryExtractor.extract(constantScoreQuery, DEFAULT_EXTRACTORS, extractedQueries);
     assertEquals(1, extractedQueries.size());
-    assertTrue(extractedQueries.get(0) instanceof ConstantScoreQuery);
+    assertThat(extractedQueries.get(0), instanceOf(ConstantScoreQuery.class));
     assertEquals(constantScoreQuery, extractedQueries.get(0));
   }
 

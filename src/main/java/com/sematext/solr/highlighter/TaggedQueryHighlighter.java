@@ -45,12 +45,6 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
   private static final String MAIN_HIGHLIGHT = "##default##";
 
   /**
-   * TaggedQueryHighlighter.
-   */
-  public TaggedQueryHighlighter() {
-  }
-
-  /**
    * TaggedQueryHighlighter which takes solrCore as parameter. It is used to be compatible with
    * org.apache.solr.highlight.DefaultSolrHighlighter.
    *
@@ -66,7 +60,6 @@ public class TaggedQueryHighlighter extends DefaultSolrHighlighter {
       throws IOException {
 
     final Collection<TaggedQuery> taggedQueries = new ArrayList<>();
-    final List<Query> otherQueries = new ArrayList<>();
     try {
       final List<Query> extractedQueries = new ArrayList<>();
       QueryExtractor.extractQuery(query, extractedQueries);

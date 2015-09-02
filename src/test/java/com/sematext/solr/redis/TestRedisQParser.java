@@ -3,8 +3,8 @@ package com.sematext.solr.redis;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.util.Version;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.schema.IndexSchema;
@@ -20,9 +20,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.SortingParams;
 import redis.clients.jedis.Tuple;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
@@ -95,13 +93,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.smembers(anyString())).thenReturn(new HashSet<>(Arrays.asList("123", "321")));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).smembers("simpleKey");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -111,13 +106,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.smembers(anyString())).thenReturn(new HashSet<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).smembers("simpleKey");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -137,13 +129,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.srandmember(anyString(), anyInt())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).srandmember("simpleKey", 2);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -153,13 +142,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.srandmember(anyString(), anyInt())).thenReturn(Collections.singletonList("123"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(1, redisQParser.parse());
     verify(jedisMock).srandmember("simpleKey", 1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
   }
 
   @Test
@@ -169,13 +155,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.srandmember(anyString(), anyInt())).thenReturn(new ArrayList<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).srandmember("simpleKey", 1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -200,13 +183,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sinter(anyString(), anyString())).thenReturn(new HashSet<>(Arrays.asList("123", "321")));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).sinter("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -218,13 +198,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sinter(anyString(), anyString())).thenReturn(new HashSet<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).sinter("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -243,13 +220,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.keys(anyString())).thenReturn(new HashSet<>(Arrays.asList("123", "321")));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).keys("pattern");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -259,13 +233,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sdiff(anyString(), anyString())).thenReturn(new HashSet<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).keys("pattern");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -290,13 +261,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sdiff(anyString(), anyString())).thenReturn(new HashSet<>(Arrays.asList("123", "321")));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).sdiff("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -308,13 +276,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sdiff(anyString(), anyString())).thenReturn(new HashSet<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).sdiff("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -339,13 +304,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sunion(anyString(), anyString())).thenReturn(new HashSet<>(Arrays.asList("123", "321")));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).sunion("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -357,13 +319,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sunion(anyString(), anyString())).thenReturn(new HashSet<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).sunion("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -382,13 +341,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.hvals(anyString())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).hvals("simpleKey");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -398,13 +354,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.hvals(anyString())).thenReturn(new ArrayList<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).hvals("simpleKey");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -423,13 +376,11 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.hkeys(anyString())).thenReturn(new HashSet<>(Arrays.asList("123", "321")));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).hkeys("simpleKey");
     final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -439,13 +390,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.hkeys(anyString())).thenReturn(new HashSet<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).hkeys("simpleKey");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -475,13 +423,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.hget(anyString(), anyString())).thenReturn("123");
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(1, redisQParser.parse());
     verify(jedisMock).hget("simpleKey", "f1");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
   }
 
   @Test
@@ -492,13 +437,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.hget(anyString(), anyString())).thenReturn(null);
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).hget("simpleKey", "f1");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -525,13 +467,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.hmget(anyString(), anyString())).thenReturn(Arrays.asList("123"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(1, redisQParser.parse());
     verify(jedisMock).hmget("hash", "field1");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
   }
 
   @Test
@@ -543,13 +482,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.hmget(anyString(), anyString())).thenReturn(new ArrayList<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).hmget("hash", "field1");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -568,13 +504,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.get(any(byte[].class))).thenReturn("val".getBytes());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(1, redisQParser.parse());
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
   }
 
   @Test
@@ -585,13 +518,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.get(any(byte[].class))).thenReturn("[1,2,3]".getBytes());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(3, redisQParser.parse());
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(3, terms.size());
   }
 
   @Test
@@ -602,13 +532,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.get(any(byte[].class))).thenReturn(Compressor.compressGzip("1".getBytes()));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(1, redisQParser.parse());
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
   }
 
   @Test
@@ -621,13 +548,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.get(any(byte[].class))).thenReturn(Compressor.compressGzip("[100,200,300]".getBytes()));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(3, redisQParser.parse());
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(3, terms.size());
   }
 
   @Test
@@ -637,13 +561,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.get(anyString())).thenReturn(null);
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -653,13 +574,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lindex(anyString(), anyLong())).thenReturn("value");
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(1, redisQParser.parse());
     verify(jedisMock).lindex("simpleKey", 0);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
   }
 
   @Test
@@ -670,13 +588,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lindex(anyString(), anyLong())).thenReturn("value");
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(1, redisQParser.parse());
     verify(jedisMock).lindex("simpleKey", 10);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
   }
 
   @Test
@@ -687,13 +602,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lindex(anyString(), anyLong())).thenReturn(null);
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).lindex("simpleKey", 10);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -718,13 +630,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.mget(anyString(), anyString())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).mget("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -736,13 +645,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.mget(anyString(), anyString())).thenReturn(new ArrayList<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).mget("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -761,13 +667,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lrange(anyString(), anyLong(), anyLong())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -778,13 +681,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lrange(anyString(), anyLong(), anyLong())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).lrange("simpleKey", -1, -1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -795,13 +695,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lrange(anyString(), anyLong(), anyLong())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).lrange("simpleKey", 0, 1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -813,13 +710,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lrange(anyString(), anyLong(), anyLong())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).lrange("simpleKey", 2, 3);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -832,13 +726,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lrange(anyString(), anyLong(), anyLong())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -851,13 +742,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lrange(anyString(), anyLong(), anyLong())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -869,13 +757,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lrange(anyString(), anyLong(), anyLong())).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -885,13 +770,10 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.lrange(anyString(), anyLong(), anyLong())).thenReturn(new ArrayList<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -901,15 +783,12 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(new ArrayList<String>());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(0, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(0, terms.size());
   }
 
   @Test
@@ -919,15 +798,12 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -938,15 +814,12 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().alpha()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -957,15 +830,12 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().asc()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -976,15 +846,12 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().desc()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -995,16 +862,13 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().limit(0, 100)),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1015,16 +879,13 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().limit(100, 0)),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1036,16 +897,13 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().limit(100, 1000)),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1056,16 +914,13 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().by("foo_*")),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1077,16 +932,13 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.sort(anyString(), any(SortingParams.class))).thenReturn(Arrays.asList("123", "321"));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().get("get_*")),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1097,13 +949,10 @@ public class TestRedisQParser {
     when(jedisMock.zrevrangeWithScores(anyString(), anyLong(), anyLong()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).zrevrangeWithScores("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1116,13 +965,10 @@ public class TestRedisQParser {
     when(jedisMock.zrevrangeWithScores(anyString(), anyLong(), anyLong()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).zrevrangeWithScores("simpleKey", 1, 100);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1133,13 +979,10 @@ public class TestRedisQParser {
     when(jedisMock.zrangeWithScores(anyString(), anyLong(), anyLong()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).zrangeWithScores("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1152,13 +995,10 @@ public class TestRedisQParser {
     when(jedisMock.zrangeWithScores(anyString(), anyLong(), anyLong()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).zrangeWithScores("simpleKey", 1, 100);
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1169,13 +1009,10 @@ public class TestRedisQParser {
     when(jedisMock.zrevrangeByScoreWithScores(anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "+inf", "-inf");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
     @Test
@@ -1186,15 +1023,12 @@ public class TestRedisQParser {
     when(localParamsMock.get("max")).thenReturn("100");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.zrevrangeByScoreWithScores(anyString(), anyString(), anyString()))
-        .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+      .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "100", "1");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1205,13 +1039,10 @@ public class TestRedisQParser {
     when(jedisMock.zrangeByScoreWithScores(anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).zrangeByScoreWithScores("simpleKey", "-inf", "+inf");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1224,13 +1055,10 @@ public class TestRedisQParser {
     when(jedisMock.zrangeByScoreWithScores(anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).zrangeByScoreWithScores("simpleKey", "1", "100");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1248,13 +1076,10 @@ public class TestRedisQParser {
     when(jedisMock.eval(anyString(), anyInt(), (String) anyVararg())).thenReturn(1);
 
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(1, redisQParser.parse());
     verify(jedisMock).eval("return 1;", 1, "k", "a");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
   }
 
   @Test
@@ -1265,11 +1090,8 @@ public class TestRedisQParser {
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.smembers(anyString())).thenReturn(new HashSet<>(Arrays.asList("123 124", "321")));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(2, redisQParser.parse());
     verify(jedisMock).smembers("simpleKey");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(2, terms.size());
   }
 
   @Test
@@ -1279,14 +1101,11 @@ public class TestRedisQParser {
     when(localParamsMock.getBool("useAnalyzer", false)).thenReturn(true);
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new WhitespaceAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new WhitespaceAnalyzer());
     when(jedisMock.smembers(anyString())).thenReturn(new HashSet<>(Arrays.asList("123 124", "321")));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
-    final Query query = redisQParser.parse();
+    assertTermSize(3, redisQParser.parse());
     verify(jedisMock).smembers("simpleKey");
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(3, terms.size());
   }
 
   @Test
@@ -1297,15 +1116,12 @@ public class TestRedisQParser {
     when(localParamsMock.get("retries")).thenReturn("2");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(requestMock.getSchema()).thenReturn(schema);
-    when(schema.getQueryAnalyzer()).thenReturn(new WhitespaceAnalyzer(Version.LUCENE_48));
+    when(schema.getQueryAnalyzer()).thenReturn(new WhitespaceAnalyzer());
     when(jedisPoolMock.getResource()).thenReturn(jedisFailingMock).thenReturn(jedisMock);
     when(jedisFailingMock.smembers("simpleKey")).thenThrow(new JedisException("Synthetic exception"));
     when(jedisMock.smembers("simpleKey")).thenReturn(new HashSet<String>(Collections.singletonList("value")));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, new RetryingCommandHandler(jedisPoolMock, 1));
-    final Query query = redisQParser.parse();
-    final Set<Term> terms = new HashSet<>();
-    query.extractTerms(terms);
-    Assert.assertEquals(1, terms.size());
+    assertTermSize(1, redisQParser.parse());
   }
 
   private static String getSortingParamString(final SortingParams params) {
@@ -1316,6 +1132,11 @@ public class TestRedisQParser {
     }
 
     return builder.toString().trim();
+  }
+
+  private static void assertTermSize(final int size, final Query query) {
+    final BooleanQuery booleanQuery = (BooleanQuery) query;
+    Assert.assertEquals(size, booleanQuery.clauses().size());
   }
 }
 
