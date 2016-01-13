@@ -31,21 +31,6 @@ public class TestConstantScoreQueryExtractor extends TestQueryExtractor {
   }
 
   @Test
-  public void testDoNotExtractWrappedFilterAndReturnConstantScoreQuery() {
-    Filter f1 = mock(Filter.class);
-
-    ConstantScoreQueryExtractor constantScoreQueryExtractor = new ConstantScoreQueryExtractor();
-    ConstantScoreQuery constantScoreQuery = new ConstantScoreQuery(f1);
-
-    List<Query> extractedQueries = new ArrayList<>();
-
-    constantScoreQueryExtractor.extract(constantScoreQuery, DEFAULT_EXTRACTORS, extractedQueries);
-    assertEquals(1, extractedQueries.size());
-    assertTrue(extractedQueries.get(0) instanceof ConstantScoreQuery);
-    assertEquals(constantScoreQuery, extractedQueries.get(0));
-  }
-
-  @Test
   public void testExtractSubqueryField() {
     Query q1 = new TermQuery(new Term("field1", "value1"));
 
