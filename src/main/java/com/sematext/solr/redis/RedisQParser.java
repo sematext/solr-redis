@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.lucene.search.BoostQuery;
 
 /**
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
@@ -151,7 +152,8 @@ final class RedisQParser extends QParser {
   @Override
   public Query parse() throws SyntaxError {
     final String fieldName = localParams.get(QueryParsing.V);
-    final BooleanQuery booleanQuery = new BooleanQuery(true);
+    final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+    booleanQueryBuilder.setDisableCoord(true);
     int booleanClausesTotal = 0;
 
     final Map<String, Float> results = commandHandler.executeCommand(commands.get(redisCommand), localParams);
@@ -182,14 +184,14 @@ final class RedisQParser extends QParser {
                 log.trace("Taking {} token {} with score {} from query string from {} for field: {}", ++counter,
                     charAttribute, score, termString, fieldName);
 
-                addTermToQuery(booleanQuery, fieldName, new BytesRef(charAttribute), score);
+                addTermToQuery(booleanQueryBuilder, fieldName, new BytesRef(charAttribute), score);
                 ++booleanClausesTotal;
               }
 
               tokenStream.end();
             }
           } else {
-            addTermToQuery(booleanQuery, fieldName, new BytesRef(termString), score);
+            addTermToQuery(booleanQueryBuilder, fieldName, new BytesRef(termString), score);
             ++booleanClausesTotal;
           }
         } catch (final IOException ex) {
@@ -201,25 +203,29 @@ final class RedisQParser extends QParser {
     log.debug("Prepared a query for field {} with {} boolean clauses. (request params: {}}", fieldName,
         booleanClausesTotal, req.getParamString());
 
-    return queryTag == null || queryTag.isEmpty() ? booleanQuery : new TaggedQuery(booleanQuery, queryTag);
+    if (queryTag == null || queryTag.isEmpty()) {
+      return booleanQueryBuilder.build();
+    } else {
+      return new TaggedQuery(booleanQueryBuilder.build(), queryTag);
+    }
   }
 
   /**
    * Adds clause to query.
    *
-   * @param query Boolean query object which should take new clauses.
+   * @param queryBuilder Boolean query builder object which should take new clauses.
    * @param fieldName Field name used in added clause.
    * @param term Term
    * @param score Optional score
    */
-  private void addTermToQuery(final BooleanQuery query, final String fieldName, final BytesRef term,
+  private void addTermToQuery(final BooleanQuery.Builder queryBuilder, final String fieldName, final BytesRef term,
       final Float score) {
-    final TermQuery termQuery = new TermQuery(new Term(fieldName, term));
+    Query termQuery = new TermQuery(new Term(fieldName, term));
 
     if (!score.isNaN()) {
-      termQuery.setBoost(score);
+      termQuery = new BoostQuery(termQuery, score);
     }
 
-    query.add(termQuery, this.operator);
+    queryBuilder.add(termQuery, this.operator);
   }
 }
