@@ -281,7 +281,7 @@
             <plugin>
                 <groupId>ru.trylogic.maven.plugins</groupId>
                 <artifactId>redis-maven-plugin</artifactId>
-                <version>1.4.5</version>
+                <version>1.4.6</version>
                 <configuration>
                     <forked>true</forked>
                 </configuration>
