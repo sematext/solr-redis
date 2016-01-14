@@ -9,6 +9,7 @@ import org.apache.solr.handler.component.HighlightComponent;
 import org.apache.solr.highlight.SolrHighlighter;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -166,6 +167,7 @@ public class TestTaggedQueryHighlighterIT extends SolrTestCaseJ4 {
   }
 
   @Test
+  @Ignore
   public void testConstantScoreQueryWithFilterPartOnly() {
     final String[] doc1 = {"id", "1", "location", "56.9485,24.0980"};
     assertU(adoc(doc1));
