@@ -27,6 +27,7 @@ import com.sematext.solr.redis.command.ZRevrangeByScore;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
@@ -42,6 +43,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.lucene.search.BoostQuery;
 
 /**
@@ -153,8 +156,11 @@ final class RedisQParser extends QParser {
   public Query parse() throws SyntaxError {
     final String fieldName = localParams.get(QueryParsing.V);
     final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+    final List<BytesRef> queryTerms = new ArrayList<>();
     booleanQueryBuilder.setDisableCoord(true);
     int booleanClausesTotal = 0;
+
+
 
     final Map<String, Float> results = commandHandler.executeCommand(commands.get(redisCommand), localParams);
 
@@ -184,14 +190,22 @@ final class RedisQParser extends QParser {
                 log.trace("Taking {} token {} with score {} from query string from {} for field: {}", ++counter,
                     charAttribute, score, termString, fieldName);
 
-                addTermToQuery(booleanQueryBuilder, fieldName, new BytesRef(charAttribute), score);
+                if (this.operator == BooleanClause.Occur.MUST) {
+                  addTermToQuery(booleanQueryBuilder, fieldName, new BytesRef(charAttribute), score);
+                } else {
+                  queryTerms.add(new BytesRef(charAttribute));
+                }
                 ++booleanClausesTotal;
               }
 
               tokenStream.end();
             }
           } else {
-            addTermToQuery(booleanQueryBuilder, fieldName, new BytesRef(termString), score);
+            if (this.operator == BooleanClause.Occur.MUST) {
+              addTermToQuery(booleanQueryBuilder, fieldName, new BytesRef(termString), score);
+            } else {
+              queryTerms.add(new BytesRef(termString));
+            }
             ++booleanClausesTotal;
           }
         } catch (final IOException ex) {
@@ -204,9 +218,18 @@ final class RedisQParser extends QParser {
         booleanClausesTotal, req.getParamString());
 
     if (queryTag == null || queryTag.isEmpty()) {
-      return booleanQueryBuilder.build();
+      if(this.operator == BooleanClause.Occur.MUST){
+        return booleanQueryBuilder.build();
+      }else{
+        return new TermsQuery(fieldName, queryTerms);
+      }
+
     } else {
-      return new TaggedQuery(booleanQueryBuilder.build(), queryTag);
+      if(this.operator == BooleanClause.Occur.MUST){
+        return new TaggedQuery(booleanQueryBuilder.build(), queryTag);
+      }else{
+        return new TaggedQuery(new TermsQuery(fieldName, queryTerms), queryTag);
+      }
     }
   }
 
