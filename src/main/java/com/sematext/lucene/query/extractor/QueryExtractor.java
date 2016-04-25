@@ -23,8 +23,7 @@ public abstract class QueryExtractor<T extends Query> {
       new PhraseQueryExtractor(),
       new TermQueryExtractor(),
       new TaggedQueryExtractor(),
-      new GenericQueryExtractor(),
-      new TermsQueryExtractor()
+      new GenericQueryExtractor()
   );
 
   /**
