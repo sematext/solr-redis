@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.ConstantScoreQuery;
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import static org.junit.Assert.assertEquals;

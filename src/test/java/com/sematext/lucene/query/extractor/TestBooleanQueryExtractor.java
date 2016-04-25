@@ -21,11 +21,12 @@ public class TestBooleanQueryExtractor extends TestQueryExtractor {
     Query q1 = mock(Query.class);
     Query q2 = mock(Query.class);
 
-    BooleanQuery booleanQuery = new BooleanQuery();
+    BooleanQuery.Builder builder = new BooleanQuery.Builder();
+    builder.add(new BooleanClause(q1, BooleanClause.Occur.MUST));
+    builder.add(new BooleanClause(q2, BooleanClause.Occur.MUST));
+    BooleanQuery booleanQuery = builder.build();
     BooleanQueryExtractor booleanQueryExtractor = new BooleanQueryExtractor();
 
-    booleanQuery.add(new BooleanClause(q1, BooleanClause.Occur.MUST));
-    booleanQuery.add(new BooleanClause(q2, BooleanClause.Occur.MUST));
 
     List<Query> extractedQueries = new ArrayList<>();
 
@@ -40,11 +41,11 @@ public class TestBooleanQueryExtractor extends TestQueryExtractor {
     Query q1 = new TermQuery(new Term("field1", "value1"));
     Query q2 = new TermQuery(new Term("field2", "value2"));
     
-    BooleanQuery booleanQuery = new BooleanQuery();
+    BooleanQuery.Builder builder = new BooleanQuery.Builder();
+    builder.add(new BooleanClause(q1, BooleanClause.Occur.MUST));
+    builder.add(new BooleanClause(q2, BooleanClause.Occur.MUST));
+    BooleanQuery booleanQuery = builder.build();
     BooleanQueryExtractor booleanQueryExtractor = new BooleanQueryExtractor();
-
-    booleanQuery.add(new BooleanClause(q1, BooleanClause.Occur.MUST));
-    booleanQuery.add(new BooleanClause(q2, BooleanClause.Occur.MUST));
 
     Set<String> extractedFieldNames = new HashSet<>();
 
