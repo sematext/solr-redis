@@ -55,11 +55,13 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "string_field:another_key^100  {!redis command=smembers key=test_set v=string_field}");
-    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='3']",
-        "//result/doc[2]/str[@name='id'][.='1']", "//result/doc[3]/str[@name='id'][.='2']");
+    params.add("sort", "id asc");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']",
+        "//result/doc[2]/str[@name='id'][.='2']", "//result/doc[3]/str[@name='id'][.='3']");
 
     params = new ModifiableSolrParams();
     params.add("q", "string_field:another_key^100  {!redis command=smembers key=test_set v=string_field}^101");
+    params.add("sort", "id asc");
     assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']",
         "//result/doc[2]/str[@name='id'][.='2']", "//result/doc[3]/str[@name='id'][.='3']");
   }
@@ -105,6 +107,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     final ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
     params.add("fq", "{!redis command=smembers key=test_set}string_field");
+    params.add("sort", "id asc");
     assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']",
         "//result/doc[2]/str[@name='id'][.='2']", "//result/doc[3]/str[@name='id'][.='3']");
   }
@@ -692,9 +695,8 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     final ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "{!redis command=zrevrangebyscore key=test_set2}string_field");
-    params.add("sort", "id asc");
-    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']",
-        "//result/doc[2]/str[@name='id'][.='2']", "//result/doc[3]/str[@name='id'][.='3']");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='3']",
+        "//result/doc[2]/str[@name='id'][.='1']", "//result/doc[3]/str[@name='id'][.='2']");
   }
 
   @Test
@@ -760,9 +762,8 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     final ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "{!redis command=zrevrange key=test_set2}string_field");
-    params.add("sort", "id asc");
-    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1']",
-        "//result/doc[2]/str[@name='id'][.='2']", "//result/doc[3]/str[@name='id'][.='3']");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='3']",
+        "//result/doc[2]/str[@name='id'][.='1']", "//result/doc[3]/str[@name='id'][.='2']");
   }
 
   @Test
@@ -804,9 +805,8 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     final ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "{!redis command=zrange key=test_set2}string_field");
-    params.add("sort", "id asc");
-    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='1]",
-        "//result/doc[2]/str[@name='id'][.='2']", "//result/doc[3]/str[@name='id'][.='3']");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='3']",
+        "//result/doc[2]/str[@name='id'][.='1']", "//result/doc[3]/str[@name='id'][.='2']");
   }
 
   @Test
@@ -1174,11 +1174,12 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     assertU(adoc(doc2));
     assertU(commit());
 
-    final ModifiableSolrParams params = new ModifiableSolrParams();
+    ModifiableSolrParams params = new ModifiableSolrParams();
     params.set("q", "{!redis command=eval script='return {\\'one\\', \\'1.2\\', \\'two\\', \\'1.3\\'};' returns_hash=true}string_field");
     assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='2']",
         "//result/doc[2]/str[@name='id'][.='1']");
     final String hash = sha1("return {'one', '1.2', 'two', '1.3'};");
+    params = new ModifiableSolrParams();
     params.set("q", "{!redis command=evalsha sha1=" + hash + " returns_hash=true}string_field");
     assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='2']",
         "//result/doc[2]/str[@name='id'][.='1']");
@@ -1219,8 +1220,8 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     JQ(req(params));
   }
 
-  @Test(expected = BooleanQuery.TooManyClauses.class)
-  public void shouldGracefullyHandleMaxBooleanClausesLimit() throws Exception {
+  //We use TermsQuery now
+  public void shouldHandleMoreThanMaxBooleanClausesLimit() throws Exception {
     final int size = 1025;
     final String[] values = new String[size];
     for (Integer a = 0; a < size; a++) {

@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.lucene.search.BoostQuery;
+import org.apache.solr.common.util.Pair;
 
 /**
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
@@ -155,12 +156,10 @@ final class RedisQParser extends QParser {
   @Override
   public Query parse() throws SyntaxError {
     final String fieldName = localParams.get(QueryParsing.V);
-    final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-    final List<BytesRef> queryTerms = new ArrayList<>();
-    booleanQueryBuilder.setDisableCoord(true);
+    final List<Pair<BytesRef, Float>> queryTerms = new ArrayList<>();
     int booleanClausesTotal = 0;
-
-
+    boolean shouldUseTermsQuery = (this.operator == BooleanClause.Occur.SHOULD);
+    Float score = null;
 
     final Map<String, Float> results = commandHandler.executeCommand(commands.get(redisCommand), localParams);
 
@@ -174,11 +173,14 @@ final class RedisQParser extends QParser {
             continue;
           }
 
-          final Float score = entry.getValue();
+          final Float newScore = entry.getValue();
+          if (score != null && newScore != score) {
+            shouldUseTermsQuery = false;
+          }
+          score = newScore;
 
           if (useQueryTimeAnalyzer) {
             log.trace("Term string {}", termString);
-
             try (final TokenStream tokenStream =
                 req.getSchema().getQueryAnalyzer().tokenStream(fieldName, termString)) {
               final CharTermAttribute charAttribute = tokenStream.addAttribute(CharTermAttribute.class);
@@ -186,26 +188,15 @@ final class RedisQParser extends QParser {
 
               int counter = 0;
               while (tokenStream.incrementToken()) {
-
                 log.trace("Taking {} token {} with score {} from query string from {} for field: {}", ++counter,
                     charAttribute, score, termString, fieldName);
-
-                if (this.operator == BooleanClause.Occur.MUST) {
-                  addTermToQuery(booleanQueryBuilder, fieldName, new BytesRef(charAttribute), score);
-                } else {
-                  queryTerms.add(new BytesRef(charAttribute));
-                }
+                queryTerms.add(new Pair<>(new BytesRef(charAttribute), score));
                 ++booleanClausesTotal;
               }
-
               tokenStream.end();
             }
           } else {
-            if (this.operator == BooleanClause.Occur.MUST) {
-              addTermToQuery(booleanQueryBuilder, fieldName, new BytesRef(termString), score);
-            } else {
-              queryTerms.add(new BytesRef(termString));
-            }
+            queryTerms.add(new Pair<>(new BytesRef(termString), score));
             ++booleanClausesTotal;
           }
         } catch (final IOException ex) {
@@ -214,21 +205,29 @@ final class RedisQParser extends QParser {
       }
     }
 
+    Query termsQuery = null;
+    if (shouldUseTermsQuery) {
+      final List<BytesRef> terms = new ArrayList<>(queryTerms.size());
+      for (Pair<BytesRef, Float> pair : queryTerms) {
+        terms.add(pair.getKey());
+      }
+      termsQuery = new TermsQuery(fieldName, terms);
+    } else {
+      final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+      booleanQueryBuilder.setDisableCoord(true);
+      for (Pair<BytesRef, Float> pair : queryTerms) {
+        addTermToQuery(booleanQueryBuilder, fieldName, pair.getKey(), pair.getValue());
+      }
+      termsQuery = booleanQueryBuilder.build();
+    }
+
     log.debug("Prepared a query for field {} with {} boolean clauses. (request params: {}}", fieldName,
         booleanClausesTotal, req.getParamString());
 
     if (queryTag == null || queryTag.isEmpty()) {
-      if (this.operator == BooleanClause.Occur.MUST) {
-        return booleanQueryBuilder.build();
-      } else {
-        return new TermsQuery(fieldName, queryTerms);
-      }
+      return termsQuery;
     } else {
-      if (this.operator == BooleanClause.Occur.MUST) {
-        return new TaggedQuery(booleanQueryBuilder.build(), queryTag);
-      } else {
-        return new TaggedQuery(new TermsQuery(fieldName, queryTerms), queryTag);
-      }
+      return new TaggedQuery(termsQuery, queryTag);
     }
   }
 
