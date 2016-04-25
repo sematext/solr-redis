@@ -158,7 +158,7 @@ final class RedisQParser extends QParser {
     final String fieldName = localParams.get(QueryParsing.V);
     final List<Pair<BytesRef, Float>> queryTerms = new ArrayList<>();
     int booleanClausesTotal = 0;
-    boolean shouldUseTermsQuery = (this.operator == BooleanClause.Occur.SHOULD);
+    boolean shouldUseTermsQuery = this.operator == BooleanClause.Occur.SHOULD;
     Float score = null;
 
     final Map<String, Float> results = commandHandler.executeCommand(commands.get(redisCommand), localParams);
