@@ -218,16 +218,15 @@ final class RedisQParser extends QParser {
         booleanClausesTotal, req.getParamString());
 
     if (queryTag == null || queryTag.isEmpty()) {
-      if(this.operator == BooleanClause.Occur.MUST){
+      if (this.operator == BooleanClause.Occur.MUST) {
         return booleanQueryBuilder.build();
-      }else{
+      } else {
         return new TermsQuery(fieldName, queryTerms);
       }
-
     } else {
-      if(this.operator == BooleanClause.Occur.MUST){
+      if (this.operator == BooleanClause.Occur.MUST) {
         return new TaggedQuery(booleanQueryBuilder.build(), queryTag);
-      }else{
+      } else {
         return new TaggedQuery(new TermsQuery(fieldName, queryTerms), queryTag);
       }
     }
