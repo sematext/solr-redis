@@ -235,10 +235,6 @@
                                     <pattern>redis</pattern>
                                     <shadedPattern>com.sematext.solr.redis</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>org.apache.commons</pattern>
-                                    <shadedPattern>com.sematext.apache.commons</shadedPattern>
-                                </relocation>
                             </relocations>
                             <artifactSet>
                                 <includes>
