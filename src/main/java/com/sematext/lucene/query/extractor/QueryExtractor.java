@@ -20,7 +20,6 @@ public abstract class QueryExtractor<T extends Query> {
       new BooleanQueryExtractor(),
       new DisjunctionQueryExtractor(),
       new ConstantScoreQueryExtractor(),
-      new FilteredQueryExtractor(),
       new PhraseQueryExtractor(),
       new TermQueryExtractor(),
       new TaggedQueryExtractor(),
