@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sematext</groupId>
     <artifactId>solr-redis</artifactId>
-    <version>1.6.0</version>
+    <version>1.7.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Solr Redis </name>
     <description>Solr Redis plugin</description>
@@ -91,7 +91,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <solr.version>5.4.0</solr.version>
+        <solr.version>6.0.0</solr.version>
         <junit.version>4.12</junit.version>
         <gson.version>2.5</gson.version>
         <mockito.version>1.10.19</mockito.version>
@@ -123,6 +123,12 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.4.1</version>
         </dependency>
 
         <dependency>
@@ -228,10 +234,6 @@
                                 <relocation>
                                     <pattern>redis</pattern>
                                     <shadedPattern>com.sematext.solr.redis</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>org.apache.commons</pattern>
-                                    <shadedPattern>com.sematext.apache.commons</shadedPattern>
                                 </relocation>
                             </relocations>
                             <artifactSet>

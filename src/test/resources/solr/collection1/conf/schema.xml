@@ -34,7 +34,7 @@
   <fieldType name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
   <fieldType name="double" class="solr.TrieDoubleField" sortMissingLast="true" omitNorms="true"/>
   <fieldType name="int" class="solr.TrieIntField" sortMissingLast="true" omitNorms="true"/>
-  <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType" units="degrees" geo="true" />
+  <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType" distanceUnits="degrees" geo="true" />
 
   <field name="_version_" type="string"/>
   <field name="id" type="string" required="true"/>
