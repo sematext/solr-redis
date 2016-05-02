@@ -16,8 +16,9 @@ import redis.clients.jedis.Jedis;
  *
  * @author prog
  */
+@SolrTestCaseJ4.SuppressSSL
 public class TestTaggedQueryHighlighterIT extends SolrTestCaseJ4 {
-  
+
   private Jedis jedis;
 
   @BeforeClass

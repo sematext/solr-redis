@@ -14,6 +14,7 @@ import redis.clients.jedis.Jedis;
 import java.net.URLDecoder;
 import java.util.concurrent.TimeUnit;
 
+@SolrTestCaseJ4.SuppressSSL
 public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
   private Jedis jedis;
