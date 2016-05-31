@@ -21,7 +21,7 @@ public class ZRevRange implements Command<JedisCommands> {
     if (withScores) {
       return ResultUtil.tupleIteratorToMap(client.zrevrangeWithScores(key, start, end));
     } else {
-      return ResultUtil.stringIteratorToMap(client.zrevrange(key, min, max));
+      return ResultUtil.stringIteratorToMap(client.zrevrange(key, start, end));
     }
   }
 }

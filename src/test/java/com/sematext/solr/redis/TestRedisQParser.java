@@ -1169,13 +1169,14 @@ public class TestRedisQParser {
     when(localParamsMock.get("command")).thenReturn("zrevrangebyscore");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(localParamsMock.get("with_scores")).thenReturn("true");
     when(jedisMock.zrevrangeByScoreWithScores(anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
-    verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "+inf", "-inf");
+    verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "-inf", "+inf");
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
     final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
@@ -1187,6 +1188,7 @@ public class TestRedisQParser {
     when(localParamsMock.get("key")).thenReturn("simpleKey");
     when(localParamsMock.get("min")).thenReturn("1");
     when(localParamsMock.get("max")).thenReturn("100");
+    when(localParamsMock.get("with_scores")).thenReturn("true");
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(jedisMock.zrevrangeByScoreWithScores(anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(new Tuple("123", (double) 1.0f), new Tuple("321", (double) 1.0f))));
@@ -1194,7 +1196,7 @@ public class TestRedisQParser {
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
-    verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "100", "1");
+    verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "1", "100");
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
     final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
