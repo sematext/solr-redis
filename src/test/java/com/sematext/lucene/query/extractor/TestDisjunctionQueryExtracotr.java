@@ -23,9 +23,10 @@ public class TestDisjunctionQueryExtracotr extends TestQueryExtractor {
 
     DisjunctionQueryExtractor disjunctionQueryExtracotr = new DisjunctionQueryExtractor();
 
-    DisjunctionMaxQuery disjunctionMaxQuery = new DisjunctionMaxQuery(0.0f);
-    disjunctionMaxQuery.add(q1);
-    disjunctionMaxQuery.add(q2);
+    List<Query> disjunctQueries = new ArrayList<>();
+    disjunctQueries.add(q1);
+    disjunctQueries.add(q2);
+    DisjunctionMaxQuery disjunctionMaxQuery = new DisjunctionMaxQuery(disjunctQueries, 0.0f);
 
     List<Query> extractedQueries = new ArrayList<>();
 
@@ -42,9 +43,10 @@ public class TestDisjunctionQueryExtracotr extends TestQueryExtractor {
 
     DisjunctionQueryExtractor disjunctionQueryExtracotr = new DisjunctionQueryExtractor();
 
-    DisjunctionMaxQuery disjunctionMaxQuery = new DisjunctionMaxQuery(0.0f);
-    disjunctionMaxQuery.add(q1);
-    disjunctionMaxQuery.add(q2);
+    List<Query> disjunctQueries = new ArrayList<>();
+    disjunctQueries.add(q1);
+    disjunctQueries.add(q2);
+    DisjunctionMaxQuery disjunctionMaxQuery = new DisjunctionMaxQuery(disjunctQueries, 0.0f);
 
     Set<String> extractedFieldNames = new HashSet<>();
 

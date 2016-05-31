@@ -14,9 +14,14 @@ public class ZRange implements Command<JedisCommands> {
     final String key = ParamUtil.assertGetStringByName(params, "key");
     final long start = ParamUtil.tryGetIntByName(params, "range_start", 0);
     final long end = ParamUtil.tryGetIntByName(params, "range_end", -1);
+	final boolean withScores = ParamUtil.tryGetBooleanByName(params, "with_scores", true);
 
     log.debug("Fetching ZRANGE from Redis for key: {} ({}, {})", key, start, end);
 
-    return ResultUtil.tupleIteratorToMap(client.zrangeWithScores(key, start, end));
+    if (withScores) {
+      return ResultUtil.tupleIteratorToMap(client.zrangeWithScores(key, start, end));
+    } else {
+	  return ResultUtil.stringIteratorToMap(client.zrange(key, start, end));
+    }
   }
 }
