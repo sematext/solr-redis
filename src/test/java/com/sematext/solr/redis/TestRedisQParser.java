@@ -4,7 +4,6 @@ import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.util.Version;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.schema.IndexSchema;
@@ -26,11 +25,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
-import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.queries.TermsQuery;
+import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Weight;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,9 +102,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).smembers("simpleKey");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -120,9 +118,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).smembers("simpleKey");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -147,9 +144,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).srandmember("simpleKey", 2);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -164,9 +160,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).srandmember("simpleKey", 1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
 
@@ -181,9 +176,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).srandmember("simpleKey", 1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -213,9 +207,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).sinter("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -232,9 +225,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).sinter("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -258,9 +250,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).keys("pattern");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -275,9 +266,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).keys("pattern");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -307,9 +297,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).sdiff("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -326,9 +315,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).sdiff("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -358,9 +346,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).sunion("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -377,9 +364,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).sunion("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -403,9 +389,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).hvals("simpleKey");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -420,9 +405,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).hvals("simpleKey");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -446,9 +430,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).hkeys("simpleKey");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -463,9 +446,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).hkeys("simpleKey");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -500,9 +482,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).hget("simpleKey", "f1");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
 
@@ -518,9 +499,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).hget("simpleKey", "f1");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -552,9 +532,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).hmget("hash", "field1");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
 
@@ -571,9 +550,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).hmget("hash", "field1");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -597,9 +575,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
 
@@ -615,9 +592,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(3, terms.size());
   }
 
@@ -633,9 +609,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
 
@@ -653,9 +628,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(3, terms.size());
   }
 
@@ -670,9 +644,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).get("simpleKey".getBytes());
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -687,9 +660,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lindex("simpleKey", 0);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
 
@@ -705,9 +677,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lindex("simpleKey", 10);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
 
@@ -723,9 +694,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lindex("simpleKey", 10);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -755,9 +725,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).mget("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -774,9 +743,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).mget("key1", "key2");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -800,9 +768,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -818,9 +785,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lrange("simpleKey", -1, -1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -836,9 +802,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lrange("simpleKey", 0, 1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -855,9 +820,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lrange("simpleKey", 2, 3);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -875,9 +839,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -895,9 +858,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -914,9 +876,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -931,9 +892,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).lrange("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -950,9 +910,8 @@ public class TestRedisQParser {
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(0, terms.size());
   }
 
@@ -969,9 +928,8 @@ public class TestRedisQParser {
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -989,9 +947,8 @@ public class TestRedisQParser {
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().alpha()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1009,9 +966,8 @@ public class TestRedisQParser {
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().asc()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1029,9 +985,8 @@ public class TestRedisQParser {
     final ArgumentCaptor<SortingParams> argument = ArgumentCaptor.forClass(SortingParams.class);
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().desc()), getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1050,9 +1005,8 @@ public class TestRedisQParser {
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().limit(0, 100)),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1071,9 +1025,8 @@ public class TestRedisQParser {
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().limit(100, 0)),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1093,9 +1046,8 @@ public class TestRedisQParser {
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().limit(100, 1000)),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1114,9 +1066,8 @@ public class TestRedisQParser {
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().by("foo_*")),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1136,9 +1087,8 @@ public class TestRedisQParser {
     verify(jedisMock).sort(eq("simpleKey"), argument.capture());
     Assert.assertEquals(getSortingParamString(new SortingParams().get("get_*")),
         getSortingParamString(argument.getValue()));
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1154,9 +1104,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).zrevrangeWithScores("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1174,9 +1123,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).zrevrangeWithScores("simpleKey", 1, 100);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1192,9 +1140,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).zrangeWithScores("simpleKey", 0, -1);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1212,9 +1159,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).zrangeWithScores("simpleKey", 1, 100);
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1230,9 +1176,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "+inf", "-inf");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1250,9 +1195,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).zrevrangeByScoreWithScores("simpleKey", "100", "1");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1268,9 +1212,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).zrangeByScoreWithScores("simpleKey", "-inf", "+inf");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1288,9 +1231,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).zrangeByScoreWithScores("simpleKey", "1", "100");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1313,9 +1255,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).eval("return 1;", 1, "k", "a");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
 
@@ -1329,9 +1270,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).smembers("simpleKey");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(2, terms.size());
   }
 
@@ -1347,9 +1287,8 @@ public class TestRedisQParser {
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
     final Query query = redisQParser.parse();
     verify(jedisMock).smembers("simpleKey");
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(3, terms.size());
   }
 
@@ -1367,11 +1306,29 @@ public class TestRedisQParser {
     when(jedisMock.smembers("simpleKey")).thenReturn(new HashSet<String>(Collections.singletonList("value")));
     redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, new RetryingCommandHandler(jedisPoolMock, 1));
     final Query query = redisQParser.parse();
-    final Set<Term> terms = new HashSet<>();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
-    searcher.createNormalizedWeight(query, true).extractTerms(terms);
+    final Set<Term> terms = extractTerms(searcher, query);
     Assert.assertEquals(1, terms.size());
   }
+
+  @Test
+  public void shouldUseTermsQuery() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("smembers");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.getBool("useAnalyzer", false)).thenReturn(true);
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getQueryAnalyzer()).thenReturn(new WhitespaceAnalyzer());
+    when(jedisMock.smembers(anyString())).thenReturn(new HashSet<>(Arrays.asList("123 124", "321", "322", "323", "324",
+            "325", "326", "327", "328", "329", "330", "331", "332", "333", "334", "335", "336", "337", "338")));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, commandHandler);
+    final Query query = redisQParser.parse();
+    verify(jedisMock).smembers("simpleKey");
+    IndexSearcher searcher = new IndexSearcher(new MultiReader());
+    Query rewrittenQuery = searcher.rewrite(query);
+    assertTrue(rewrittenQuery instanceof TermsQuery);
+  }
+
 
   private static String getSortingParamString(final SortingParams params) {
     final StringBuilder builder = new StringBuilder();
@@ -1381,6 +1338,17 @@ public class TestRedisQParser {
     }
 
     return builder.toString().trim();
+  }
+
+  private static Set<Term> extractTerms(IndexSearcher searcher, Query query) throws IOException {
+    final Set<Term> terms = new HashSet<>();
+    Query rewrittenQuery = searcher.rewrite(query);
+    if (rewrittenQuery instanceof ConstantScoreQuery) {
+      ConstantScoreQuery constantScoreQuery = (ConstantScoreQuery)rewrittenQuery;
+      rewrittenQuery = constantScoreQuery.getQuery();
+    }
+    searcher.createNormalizedWeight(rewrittenQuery, true).extractTerms(terms);
+    return terms;
   }
 }
 
