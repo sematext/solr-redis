@@ -14,9 +14,14 @@ public final class ZRangeByScore implements Command<JedisCommands> {
     final String key = ParamUtil.assertGetStringByName(params, "key");
     final String min = ParamUtil.tryGetStringByName(params, "min", "-inf");
     final String max = ParamUtil.tryGetStringByName(params, "max", "+inf");
+    final boolean withScores = ParamUtil.tryGetBooleanByName(params, "with_scores", true);
 
     log.debug("Fetching ZRANGEBYSCORE from Redis for key: {} ({}, {})", key, min, max);
 
-    return ResultUtil.tupleIteratorToMap(client.zrangeByScoreWithScores(key, min, max));
+    if (withScores) {
+      return ResultUtil.tupleIteratorToMap(client.zrangeByScoreWithScores(key, min, max));
+    } else {
+      return ResultUtil.stringIteratorToMap(client.zrangeByScore(key, min, max));
+    }
   }
 }

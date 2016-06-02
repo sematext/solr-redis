@@ -14,9 +14,14 @@ public final class ZRevrangeByScore implements Command<JedisCommands> {
     final String key = ParamUtil.assertGetStringByName(params, "key");
     final String min = ParamUtil.tryGetStringByName(params, "min", "-inf");
     final String max = ParamUtil.tryGetStringByName(params, "max", "+inf");
+    final boolean withScores = ParamUtil.tryGetBooleanByName(params, "with_scores", true);
 
     log.debug("Fetching ZREVRANGEBYSCORE from Redis for key: {} ({}, {})", key, min, max);
 
-    return ResultUtil.tupleIteratorToMap(client.zrevrangeByScoreWithScores(key, max, min));
+    if (withScores) {
+      return ResultUtil.tupleIteratorToMap(client.zrevrangeByScoreWithScores(key, max, min));
+    } else {
+      return ResultUtil.stringIteratorToMap(client.zrevrangeByScore(key, max, min));
+    }
   }
 }

@@ -14,9 +14,14 @@ public class ZRevRange implements Command<JedisCommands> {
     final String key = ParamUtil.assertGetStringByName(params, "key");
     final long start = ParamUtil.tryGetIntByName(params, "range_start", 0);
     final long end = ParamUtil.tryGetIntByName(params, "range_end", -1);
+    final boolean withScores = ParamUtil.tryGetBooleanByName(params, "with_scores", true);
 
     log.debug("Fetching ZREVRANGE from Redis for key: {} ({}, {})", key, start, end);
 
-    return ResultUtil.tupleIteratorToMap(client.zrevrangeWithScores(key, start, end));
+    if (withScores) {
+      return ResultUtil.tupleIteratorToMap(client.zrevrangeWithScores(key, start, end));
+    } else {
+      return ResultUtil.stringIteratorToMap(client.zrevrange(key, start, end));
+    }
   }
 }
