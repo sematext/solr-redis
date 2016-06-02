@@ -21,7 +21,7 @@ public final class ZRangeByScore implements Command<JedisCommands> {
     if (withScores) {
       return ResultUtil.tupleIteratorToMap(client.zrangeByScoreWithScores(key, min, max));
     } else {
-	  return ResultUtil.stringIteratorToMap(client.zrangeByScore(key, min, max));
+      return ResultUtil.stringIteratorToMap(client.zrangeByScore(key, min, max));
     }
   }
 }

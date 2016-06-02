@@ -21,7 +21,7 @@ public final class ZRevrangeByScore implements Command<JedisCommands> {
     if (withScores) {
       return ResultUtil.tupleIteratorToMap(client.zrevrangeByScoreWithScores(key, min, max));
     } else {
-	  return ResultUtil.stringIteratorToMap(client.zrevrangeByScore(key, min, max));
+      return ResultUtil.stringIteratorToMap(client.zrevrangeByScore(key, min, max));
     }
   }
 }

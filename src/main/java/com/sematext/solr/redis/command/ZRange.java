@@ -21,7 +21,7 @@ public class ZRange implements Command<JedisCommands> {
     if (withScores) {
       return ResultUtil.tupleIteratorToMap(client.zrangeWithScores(key, start, end));
     } else {
-	  return ResultUtil.stringIteratorToMap(client.zrange(key, start, end));
+      return ResultUtil.stringIteratorToMap(client.zrange(key, start, end));
     }
   }
 }
