@@ -19,9 +19,9 @@ public final class ZRevrangeByScore implements Command<JedisCommands> {
     log.debug("Fetching ZREVRANGEBYSCORE from Redis for key: {} ({}, {})", key, min, max);
 
     if (withScores) {
-      return ResultUtil.tupleIteratorToMap(client.zrevrangeByScoreWithScores(key, min, max));
+      return ResultUtil.tupleIteratorToMap(client.zrevrangeByScoreWithScores(key, max, min));
     } else {
-      return ResultUtil.stringIteratorToMap(client.zrevrangeByScore(key, min, max));
+      return ResultUtil.stringIteratorToMap(client.zrevrangeByScore(key, max, min));
     }
   }
 }
