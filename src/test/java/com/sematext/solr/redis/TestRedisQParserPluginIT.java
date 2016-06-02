@@ -694,7 +694,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     jedis.zadd("test_set2", 0, "member4");
 
     final ModifiableSolrParams params = new ModifiableSolrParams();
-    params.add("q", "{!redis command=zrevrangebyscore key=test_set2}string_field");
+    params.add("q", "{!redis command=zrevrangebyscore key=test_set2 with_scores=true}string_field");
     assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='3']",
         "//result/doc[2]/str[@name='id'][.='1']", "//result/doc[3]/str[@name='id'][.='2']");
   }
@@ -719,7 +719,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
 
     final ModifiableSolrParams params = new ModifiableSolrParams();
     params.add("q", "*:*");
-    params.add("fq", "{!redis command=zrevrangebyscore key=test_set min='-inf' max=1}string_field");
+    params.add("fq", "{!redis command=zrevrangebyscore key=test_set min='-inf' max=1 with_scores=true}string_field");
     assertQ(req(params), "*[count(//doc)=1]", "//result/doc[1]/str[@name='id'][.='1']");
   }
 
@@ -740,7 +740,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     jedis.zadd("test_set", 3, "member3");
 
     final ModifiableSolrParams params = new ModifiableSolrParams();
-    params.add("q", "{!redis command=zrevrange key=test_set range_start=1 range_end=2 boost=10}string_field");
+    params.add("q", "{!redis command=zrevrange key=test_set range_start=1 range_end=2 boost=10 with_scores=true}string_field");
     params.add("sort", "id asc");
     assertQ(req(params), "*[count(//doc)=2]", "//result/doc[1]/str[@name='id'][.='1']");
   }
