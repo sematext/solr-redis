@@ -209,14 +209,14 @@ final class RedisQParser extends QParser {
     if (shouldUseTermsQuery) {
       final List<BytesRef> terms = new ArrayList<>(queryTerms.size());
       for (Pair<BytesRef, Float> pair : queryTerms) {
-        terms.add(pair.getKey());
+        terms.add(pair.first());
       }
       termsQuery = new TermsQuery(fieldName, terms);
     } else {
       final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
       booleanQueryBuilder.setDisableCoord(true);
       for (Pair<BytesRef, Float> pair : queryTerms) {
-        addTermToQuery(booleanQueryBuilder, fieldName, pair.getKey(), pair.getValue());
+        addTermToQuery(booleanQueryBuilder, fieldName, pair.first(), pair.second());
       }
       termsQuery = booleanQueryBuilder.build();
     }
