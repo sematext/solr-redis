@@ -34,8 +34,9 @@ Configure the query parser plugin in `solrconfig.xml`. Add the following to the 
 
  * **command** - Redis command. Currently allowed: `SMEMBERS`, `SRANDMEMBER`, `SDIFF`, `SINTER`, `SUNION`, `ZRANGE`, `ZREVRANGE`, `ZRANGEBYSCORE`, `ZREVRANGEBYSCORE`, `HKEYS`, `HMGET`, `HVALS`, `LRANGE`, `LINDEX`, `GET`, `MGET`, `KEYS`, `SORT`, `EVAL`, `EVALSHA` (required)
  * **key** - Key used to fetch data from Redis (required)
- * **operator** - Operator which connects terms taken from Redis. Allowed values are AND/OR (optional - default is OR)
- * **useAnalyzer** - Turns on and off query time analyzer true/false (optional - default is true)
+ * **operator** - Operator which connects terms taken from Redis. Allowed values are AND/OR (optional - default is **OR**)
+ * **useAnalyzer** - Turns on and off query time analyzer true/false (optional - default is **true**)
+ * **ignoreScore** - It determines whether QParser should respect scoring or not. If not TermsQuery can be used which is more efficient, otherwise BooleanQuery is used which by default has limit of 1024 claues. Example: lets assume we fetch 2 values from Redis: value1 and value2 and we have multivalued field in Solr index. When we consider 2 documents in Solr index: one contains only value1 and second contains both value1 and value2. In case of ignoreScore=true two documents will get the same score. (optional - default is **false**)
 
 GET specific parameters:
  * **compression**: Defines a format for compression. `gzip` is the only supported option right now

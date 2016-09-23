@@ -13,8 +13,11 @@ import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import java.net.URLDecoder;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
+  private static final Logger log = LoggerFactory.getLogger(TestRedisQParserPluginIT.class);
 
   private Jedis jedis;
 
@@ -36,8 +39,8 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
       jedis.sadd("test_set", "test");
       jedis.hset("test_hash", "key1", "value1");
       jedis.lpush("test_list", "element1");
-
-    } catch (final RuntimeException ignored) {
+    } catch (final RuntimeException ex) {
+      log.error("Errorw when configuring local Jedis connection", ex);
     }
   }
 
@@ -1220,6 +1223,48 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     JQ(req(params));
   }
 
+  @Test
+  public void shouldScoreDocumentsWithMultivaluedFields() throws Exception {
+    final String[] doc1 = {"id", "1", "interestIds", "1", "interestIds", "2"};
+    final String[] doc2 = {"id", "2", "interestIds", "2", "interestIds", "3", "interestIds", "4"};
+    final String[] doc3 = {"id", "3", "interestIds", "3", "interestIds", "4", "interestIds", "5"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(commit());
+
+    jedis.sadd("interests", "2");
+    jedis.sadd("interests", "3");
+    jedis.sadd("interests", "4");
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "{!redis command=smembers key=interests}interestIds");
+    params.set("fl", "score,interestIds,id");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/str[@name='id'][.='2']",
+        "//result/doc[2]/str[@name='id'][.='3']", "//result/doc[3]/str[@name='id'][.='1']");
+  }
+
+  @Test
+  public void shouldIgnoreScoreDocuments() throws Exception {
+    final String[] doc1 = {"id", "1", "interestIds", "1", "interestIds", "2"};
+    final String[] doc2 = {"id", "2", "interestIds", "2", "interestIds", "3", "interestIds", "4"};
+    final String[] doc3 = {"id", "3", "interestIds", "3", "interestIds", "4", "interestIds", "5"};
+    assertU(adoc(doc1));
+    assertU(adoc(doc2));
+    assertU(adoc(doc3));
+    assertU(commit());
+
+    jedis.sadd("interests", "2");
+    jedis.sadd("interests", "3");
+    jedis.sadd("interests", "4");
+
+    final ModifiableSolrParams params = new ModifiableSolrParams();
+    params.set("q", "{!redis command=smembers key=interests ignoreScore=true}interestIds");
+    params.set("fl", "score,interestIds,id");
+    assertQ(req(params), "*[count(//doc)=3]", "//result/doc[1]/float[@name='score'][.=1.0]",
+        "//result/doc[2]/float[@name='score'][.=1.0]", "//result/doc[3]/float[@name='score'][.=1.0]");
+  }
+
   //We use TermsQuery now
   public void shouldHandleMoreThanMaxBooleanClausesLimit() throws Exception {
     final int size = 1025;
@@ -1269,3 +1314,4 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     }
   }
 }
+

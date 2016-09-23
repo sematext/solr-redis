@@ -122,6 +122,11 @@ final class RedisQParser extends QParser {
   private final boolean useQueryTimeAnalyzer;
 
   /**
+   * Parameters which determines whether score should be ignored or not.
+   */
+  private final boolean ignoreScore;
+
+  /**
    *
    * @param qstr Query string
    * @param localParams Local parameters for this query parser
@@ -135,6 +140,7 @@ final class RedisQParser extends QParser {
     this.commandHandler = commandHandler;
 
     redisCommand = localParams.get("command") == null ? null : localParams.get("command").toUpperCase();
+    ignoreScore = localParams.get("ignoreScore") == null ? false : Boolean.parseBoolean(localParams.get("ignoreScore"));
     final String operatorString = localParams.get("operator");
     queryTag = localParams.get("tag");
 
@@ -158,7 +164,7 @@ final class RedisQParser extends QParser {
     final String fieldName = localParams.get(QueryParsing.V);
     final List<Pair<BytesRef, Float>> queryTerms = new ArrayList<>();
     int booleanClausesTotal = 0;
-    boolean shouldUseTermsQuery = this.operator == BooleanClause.Occur.SHOULD;
+    boolean shouldUseTermsQuery = (this.operator == BooleanClause.Occur.SHOULD) && ignoreScore;
     Float score = null;
 
     final Map<String, Float> results = commandHandler.executeCommand(commands.get(redisCommand), localParams);
@@ -174,7 +180,7 @@ final class RedisQParser extends QParser {
           }
 
           final Float newScore = entry.getValue();
-          if (score != null && newScore != score) {
+          if (score != null && newScore != score && !ignoreScore) {
             shouldUseTermsQuery = false;
           }
           score = newScore;
@@ -209,14 +215,14 @@ final class RedisQParser extends QParser {
     if (shouldUseTermsQuery) {
       final List<BytesRef> terms = new ArrayList<>(queryTerms.size());
       for (Pair<BytesRef, Float> pair : queryTerms) {
-        terms.add(pair.getKey());
+        terms.add(pair.first());
       }
       termsQuery = new TermsQuery(fieldName, terms);
     } else {
       final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
       booleanQueryBuilder.setDisableCoord(true);
       for (Pair<BytesRef, Float> pair : queryTerms) {
-        addTermToQuery(booleanQueryBuilder, fieldName, pair.getKey(), pair.getValue());
+        addTermToQuery(booleanQueryBuilder, fieldName, pair.first(), pair.second());
       }
       termsQuery = booleanQueryBuilder.build();
     }

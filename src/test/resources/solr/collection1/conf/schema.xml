@@ -43,6 +43,9 @@
   <field name="int_field" type="int"/>
   <field name="location" type="location_rpt" />
 
+  <!-- mentioned in https://github.com/sematext/solr-redis/issues/38 -->
+  <field name="interestIds" type="string" multiValued="true" indexed="true" stored="true"/>
+
   <!-- Field to use to determine and enforce document uniqueness.
       Unless this field is marked with required="false", it will be a required field
    -->

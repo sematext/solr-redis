@@ -1304,7 +1304,8 @@ public class TestRedisQParser {
     when(jedisPoolMock.getResource()).thenReturn(jedisFailingMock).thenReturn(jedisMock);
     when(jedisFailingMock.smembers("simpleKey")).thenThrow(new JedisException("Synthetic exception"));
     when(jedisMock.smembers("simpleKey")).thenReturn(new HashSet<String>(Collections.singletonList("value")));
-    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock, new RetryingCommandHandler(jedisPoolMock, 1));
+    redisQParser = new RedisQParser("string_field", localParamsMock, paramsMock, requestMock,
+            new RetryingCommandHandler(jedisPoolMock, 1));
     final Query query = redisQParser.parse();
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
     final Set<Term> terms = extractTerms(searcher, query);
@@ -1315,6 +1316,7 @@ public class TestRedisQParser {
   public void shouldUseTermsQuery() throws SyntaxError, IOException {
     when(localParamsMock.get("command")).thenReturn("smembers");
     when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("ignoreScore")).thenReturn("true");
     when(localParamsMock.getBool("useAnalyzer", false)).thenReturn(true);
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
     when(requestMock.getSchema()).thenReturn(schema);
