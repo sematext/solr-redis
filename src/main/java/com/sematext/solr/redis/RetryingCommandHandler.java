@@ -73,7 +73,7 @@ class RetryingCommandHandler implements CommandHandler {
 
     if (retries > 0) {
       log.warn("Redis communication error recovered after {}ms and {} of {} retries for command {} on {}",
-          currentTimeMillis() - methodInvocationStart, retries, maxRetries, command.getClass().getName(),
+          currentTimeMillis() - methodInvocationStart, retries + 1, maxRetries, command.getClass().getName(),
           localParams.get("key"));
     }
 
