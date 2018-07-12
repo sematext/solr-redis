@@ -43,20 +43,26 @@ class RetryingCommandHandler implements CommandHandler {
   public Map<String, Float> executeCommand(final Command command, final SolrParams localParams) {
     int retries = 0;
 
+    Map<String, Float> results = null;
+    final long methodInvocationStart = currentTimeMillis();
+
     do {
       Jedis jedis = null;
+      final long commandInvocationStart = currentTimeMillis();
+
       try {
         jedis = connectionPool.getResource();
-        final Map<String, Float> results = command.execute(jedis, localParams);
+        results = command.execute(jedis, localParams);
         connectionPool.returnResource(jedis);
-        return results;
+
+        break;
 
       } catch (final JedisException e) {
         connectionPool.returnBrokenResource(jedis);
 
-        log.warn("Redis communication error occurred with Jedis${} for command {}/{}: {}. Retry {} of {}",
-            System.identityHashCode(jedis), command.getClass().getName(), localParams.get("key"),
-            e.getMessage(), retries, maxRetries);
+        log.warn("Redis communication error occurred with Jedis${} after {}ms for command {} on {}: {}. Retry {} of {}",
+            System.identityHashCode(jedis), currentTimeMillis() - commandInvocationStart, command.getClass().getName(),
+            localParams.get("key"), e.getMessage(), retries + 1, maxRetries);
 
         if (retries >= maxRetries) {
           throw e;
@@ -65,7 +71,17 @@ class RetryingCommandHandler implements CommandHandler {
       }
     } while (retries++ < maxRetries);
 
-    // Make the compiler happy
-    return null;
+    if (retries > 0) {
+      log.warn("Redis communication error recovered after {}ms and {} of {} retries for command {} on {}",
+          currentTimeMillis() - methodInvocationStart, retries + 1, maxRetries, command.getClass().getName(),
+          localParams.get("key"));
+    }
+
+    return results;
+  }
+
+    /** @return Current time in milliseconds */
+  private static long currentTimeMillis() {
+    return System.currentTimeMillis();
   }
 }
