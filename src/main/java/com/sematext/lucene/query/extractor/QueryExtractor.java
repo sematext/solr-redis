@@ -9,7 +9,7 @@ import org.apache.lucene.search.Query;
  * This abstract class is template for classes which extends org.apache.lucene.search.Query.
  *
  * @author prog
- * @param <T>
+ * @param <T> Query type.
  */
 public abstract class QueryExtractor<T extends Query> {
 

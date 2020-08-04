@@ -4,6 +4,8 @@ import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.QueryVisitor;
+import org.apache.lucene.search.TermInSetQuery;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.schema.IndexSchema;
@@ -26,7 +28,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
 import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.IndexSearcher;
 import static org.junit.Assert.assertTrue;
@@ -1328,7 +1329,7 @@ public class TestRedisQParser {
     verify(jedisMock).smembers("simpleKey");
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
     Query rewrittenQuery = searcher.rewrite(query);
-    assertTrue(rewrittenQuery instanceof TermsQuery);
+    assertTrue(rewrittenQuery instanceof TermInSetQuery);
   }
 
 
@@ -1349,7 +1350,7 @@ public class TestRedisQParser {
       ConstantScoreQuery constantScoreQuery = (ConstantScoreQuery)rewrittenQuery;
       rewrittenQuery = constantScoreQuery.getQuery();
     }
-    searcher.createNormalizedWeight(rewrittenQuery, true).extractTerms(terms);
+    rewrittenQuery.visit(QueryVisitor.termCollector(terms));
     return terms;
   }
 }
