@@ -102,9 +102,14 @@
 
     <dependencies>
         <dependency>
+		  <groupId>it.ozimov</groupId>
+		  <artifactId>embedded-redis</artifactId>
+		  <version>0.7.3</version>
+		</dependency>
+        <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>2.7.3</version>
+            <version>2.10.2</version>
         </dependency>
 
         <dependency>
@@ -279,31 +284,6 @@
                 <configuration>
                     <skipTests>${skip.integration.tests}</skipTests>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>ru.trylogic.maven.plugins</groupId>
-                <artifactId>redis-maven-plugin</artifactId>
-                <version>1.4.5</version>
-                <configuration>
-                    <forked>true</forked>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>start-redis</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop-redis</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>shutdown</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>

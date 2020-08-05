@@ -45,7 +45,7 @@ public class TestRedisQParserPlugin {
   public void shouldConfigurePoolWithDefaultParametersIfNoSpecificConfigurationIsGiven() {
     parserPlugin.init(new NamedList());
 
-    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.getLocalhost()),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
     assertNull(passwordArgument.getValue());
@@ -56,7 +56,7 @@ public class TestRedisQParserPlugin {
   public void shouldConfigurePoolWithDefaultParametersIfNullIsGiven() {
     parserPlugin.init(null);
 
-    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.getLocalhost()),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
     assertNull(passwordArgument.getValue());
@@ -97,7 +97,7 @@ public class TestRedisQParserPlugin {
     list.add("password", "s3cr3t");
     parserPlugin.init(list);
 
-    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.getLocalhost()),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), eq("s3cr3t"),
         eq(Protocol.DEFAULT_DATABASE));
     verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
@@ -110,7 +110,7 @@ public class TestRedisQParserPlugin {
     list.add("database", "1");
     parserPlugin.init(list);
 
-    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.getLocalhost()),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(1));
     verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
@@ -125,7 +125,7 @@ public class TestRedisQParserPlugin {
     list.add("timeout", "100");
     parserPlugin.init(list);
 
-    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.getLocalhost()),
         eq(Protocol.DEFAULT_PORT), eq(100), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
     verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
@@ -140,7 +140,7 @@ public class TestRedisQParserPlugin {
     list.add("retries", "100");
     parserPlugin.init(list);
 
-    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.getLocalhost()),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
     verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(100));
@@ -155,7 +155,7 @@ public class TestRedisQParserPlugin {
     list.add("maxConnections", "100");
     parserPlugin.init(list);
 
-    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.LOCALHOST_STR),
+    verify(parserPlugin).createPool(poolConfigArgument.capture(), eq(HostAndPort.getLocalhost()),
         eq(Protocol.DEFAULT_PORT), eq(Protocol.DEFAULT_TIMEOUT), passwordArgument.capture(),
         eq(Protocol.DEFAULT_DATABASE));
     verify(parserPlugin).createCommandHandler(poolArgument.capture(), eq(1));
