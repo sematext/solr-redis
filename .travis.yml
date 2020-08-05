@@ -1,16 +1,11 @@
 language: java
-# shouldn't be needed because Maven stats its own Redis
-#services:
-#  - redis-server
+dist: focal
 script: "mvn test verify -Dskip.integration.tests=false"
 before_install:
   - cat /etc/hosts # optionally check the content *before*
   - sudo hostname "$(hostname | cut -c1-63)"
   - sed -e "s/^\\(127\\.0\\.0\\.1.*\\)/\\1 $(hostname | cut -c1-63)/" /etc/hosts | sudo tee /etc/hosts
   - cat /etc/hosts # optionally check the content *after*
-env:
-  matrix:
-    - TRAVIS_JDK=adopt@1.11.0-7
 cache:
   directories:
     - $HOME/.m2
