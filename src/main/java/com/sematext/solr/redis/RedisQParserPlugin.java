@@ -89,7 +89,7 @@ public class RedisQParserPlugin extends QParserPlugin {
     final GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
     poolConfig.setMaxTotal(getInt(args, MAX_CONNECTIONS_FIELD, DEFAULT_MAX_CONNECTIONS));
 
-    final String host = getString(args, HOST_FIELD, HostAndPort.LOCALHOST_STR);
+    final String host = getString(args, HOST_FIELD, HostAndPort.getLocalhost());
     final int timeout = getInt(args, TIMEOUT_FIELD, Protocol.DEFAULT_TIMEOUT);
     final String password = getString(args, PASSWORD_FIELD, null);
     final int database = getInt(args, DATABASE_FIELD, Protocol.DEFAULT_DATABASE);

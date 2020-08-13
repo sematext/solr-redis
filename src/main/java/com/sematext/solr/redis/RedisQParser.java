@@ -27,10 +27,10 @@ import com.sematext.solr.redis.command.ZRevrangeByScore;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermInSetQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.util.BytesRef;
 import org.apache.solr.common.params.SolrParams;
@@ -217,10 +217,9 @@ final class RedisQParser extends QParser {
       for (Pair<BytesRef, Float> pair : queryTerms) {
         terms.add(pair.first());
       }
-      termsQuery = new TermsQuery(fieldName, terms);
+      termsQuery = new TermInSetQuery(fieldName, terms);
     } else {
       final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-      booleanQueryBuilder.setDisableCoord(true);
       for (Pair<BytesRef, Float> pair : queryTerms) {
         addTermToQuery(booleanQueryBuilder, fieldName, pair.first(), pair.second());
       }
@@ -248,8 +247,7 @@ final class RedisQParser extends QParser {
   private void addTermToQuery(final BooleanQuery.Builder queryBuilder, final String fieldName, final BytesRef term,
       final Float score) {
     Query termQuery = new TermQuery(new Term(fieldName, term));
-
-    if (!score.isNaN()) {
+    if (!score.isNaN() && (score > 0)) {
       termQuery = new BoostQuery(termQuery, score);
     }
 

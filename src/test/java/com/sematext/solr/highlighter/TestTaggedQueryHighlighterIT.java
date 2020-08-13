@@ -7,9 +7,11 @@ import static org.apache.solr.SolrTestCaseJ4.commit;
 import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.handler.component.HighlightComponent;
 import org.apache.solr.highlight.SolrHighlighter;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
+import redis.embedded.RedisServer;
 
 /**
  *
@@ -18,12 +20,20 @@ import redis.clients.jedis.Jedis;
 public class TestTaggedQueryHighlighterIT extends SolrTestCaseJ4 {
   
   private Jedis jedis;
+  
+  private static RedisServer redisServer;
 
   @BeforeClass
   public static void beforeClass() throws Exception {
     initCore("tagged-highlighting-solrconfig.xml", "schema.xml");
     SolrHighlighter highlighter = HighlightComponent.getHighlighter(h.getCore());
     assertTrue("wrong highlighter: " + highlighter.getClass(), highlighter instanceof TaggedQueryHighlighter);
+    
+    redisServer = RedisServer.builder()
+        .port(6379)
+        .setting("bind localhost")
+        .build();
+    redisServer.start();
   }
 
   @Override
@@ -177,4 +187,9 @@ public class TestTaggedQueryHighlighterIT extends SolrTestCaseJ4 {
     params.add("hl.fl", "location");
     assertQ(req(params), "*[count(//doc)=1]", "count(//lst[@name='highlighting']/*)=1");
   }
+  
+  @AfterClass
+  public static void afterClass() { 
+    redisServer.stop();
+  } 
 }

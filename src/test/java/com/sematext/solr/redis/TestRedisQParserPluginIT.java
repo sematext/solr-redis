@@ -7,10 +7,13 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.request.SolrQueryRequest;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
+import redis.embedded.RedisServer;
+
 import java.net.URLDecoder;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -18,12 +21,20 @@ import org.slf4j.LoggerFactory;
 
 public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
   private static final Logger log = LoggerFactory.getLogger(TestRedisQParserPluginIT.class);
-
+  
   private Jedis jedis;
+  
+  private static RedisServer redisServer;
 
   @BeforeClass
   public static void beforeClass() throws Exception {
     initCore("solrconfig.xml", "schema.xml");
+
+    redisServer = RedisServer.builder()
+        .port(6379)
+        .setting("bind localhost")
+        .build();
+    redisServer.start();
   }
 
   @Before
@@ -40,7 +51,7 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
       jedis.hset("test_hash", "key1", "value1");
       jedis.lpush("test_list", "element1");
     } catch (final RuntimeException ex) {
-      log.error("Errorw when configuring local Jedis connection", ex);
+      log.error("Error when configuring local Jedis connection", ex);
     }
   }
 
@@ -1313,5 +1324,10 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     } catch (final RuntimeException ignored) {
     }
   }
+  
+  @AfterClass
+  public static void afterClass() { 
+    redisServer.stop();
+  } 
 }
 

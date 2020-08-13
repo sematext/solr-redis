@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sematext</groupId>
     <artifactId>solr-redis</artifactId>
-    <version>1.9.0-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Solr Redis </name>
     <description>Solr Redis plugin</description>
@@ -91,7 +91,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <solr.version>6.2.0</solr.version>
+        <solr.version>8.6.0</solr.version>
         <junit.version>4.12</junit.version>
         <gson.version>2.5</gson.version>
         <mockito.version>1.10.19</mockito.version>
@@ -102,9 +102,14 @@
 
     <dependencies>
         <dependency>
+		  <groupId>it.ozimov</groupId>
+		  <artifactId>embedded-redis</artifactId>
+		  <version>0.7.3</version>
+		</dependency>
+        <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>2.7.3</version>
+            <version>2.10.2</version>
         </dependency>
 
         <dependency>
@@ -188,15 +193,15 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -209,6 +214,7 @@
 
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -222,7 +228,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>1.5</version>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -278,31 +284,6 @@
                 <configuration>
                     <skipTests>${skip.integration.tests}</skipTests>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>ru.trylogic.maven.plugins</groupId>
-                <artifactId>redis-maven-plugin</artifactId>
-                <version>1.4.5</version>
-                <configuration>
-                    <forked>true</forked>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>start-redis</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop-redis</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>shutdown</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>
