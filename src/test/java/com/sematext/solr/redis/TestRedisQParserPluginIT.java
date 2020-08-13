@@ -31,9 +31,9 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
     initCore("solrconfig.xml", "schema.xml");
 
     redisServer = RedisServer.builder()
-    		.port(6379)
-    		.setting("bind localhost")
-    		.build();
+        .port(6379)
+        .setting("bind localhost")
+        .build();
     redisServer.start();
   }
 
@@ -1326,9 +1326,8 @@ public class TestRedisQParserPluginIT extends SolrTestCaseJ4 {
   }
   
   @AfterClass
-  public static void afterClass()	
-  {	
+  public static void afterClass() { 
     redisServer.stop();
-  }	
+  } 
 }
 

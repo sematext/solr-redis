@@ -30,9 +30,9 @@ public class TestTaggedQueryHighlighterIT extends SolrTestCaseJ4 {
     assertTrue("wrong highlighter: " + highlighter.getClass(), highlighter instanceof TaggedQueryHighlighter);
     
     redisServer = RedisServer.builder()
-    		.port(6379)
-    		.setting("bind localhost")
-    		.build();
+        .port(6379)
+        .setting("bind localhost")
+        .build();
     redisServer.start();
   }
 
@@ -189,8 +189,7 @@ public class TestTaggedQueryHighlighterIT extends SolrTestCaseJ4 {
   }
   
   @AfterClass
-  public static void afterClass()	
-  {	
+  public static void afterClass() { 
     redisServer.stop();
-  }	
+  } 
 }
