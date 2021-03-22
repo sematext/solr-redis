@@ -1,6 +1,8 @@
 package com.sematext.solr.redis;
 
 import com.sematext.solr.redis.command.Command;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.apache.solr.common.params.SolrParams;
 import org.junit.Before;
@@ -17,7 +19,7 @@ import java.util.Map;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.*;
+import org.mockito.MockitoAnnotations;
 
 public class TestRetryingCommandHandler {
   @Mock
@@ -39,10 +41,21 @@ public class TestRetryingCommandHandler {
   private SolrParams localParams;
 
   private final Map<String, Float> expectedResult = new HashMap<>();
+  
+  private AutoCloseable mocks;
 
   @Before
   public void setUp() {
-    initMocks(this);
+    mocks = MockitoAnnotations.openMocks(this);
+  }
+  
+  @After
+  public void tearDown() {
+    try {
+      mocks.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @Test

@@ -47,6 +47,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.solr.common.util.Pair;
+import org.apache.solr.schema.FieldType;
+import org.apache.solr.schema.IndexSchema;
 
 /**
  * RedisQParser is responsible for preparing a query based on data fetched from Redis.
@@ -212,18 +214,39 @@ final class RedisQParser extends QParser {
     }
 
     Query termsQuery = null;
-    if (shouldUseTermsQuery) {
-      final List<BytesRef> terms = new ArrayList<>(queryTerms.size());
-      for (Pair<BytesRef, Float> pair : queryTerms) {
-        terms.add(pair.first());
-      }
-      termsQuery = new TermInSetQuery(fieldName, terms);
-    } else {
+
+    FieldType ft = null;
+    final IndexSchema schema = req.getSchema();
+    if (schema != null) {
+      ft = schema.getFieldTypeNoEx(fieldName);
+    }
+
+    if (ft != null && ft.isPointField()) {
+      log.trace("Using boolean query with numeric field subclauses (request params: {})", req.getParamString());
+
       final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
       for (Pair<BytesRef, Float> pair : queryTerms) {
-        addTermToQuery(booleanQueryBuilder, fieldName, pair.first(), pair.second());
+        addNumericTermToQuery(booleanQueryBuilder, fieldName, pair.first(), pair.second(), ft);
       }
       termsQuery = booleanQueryBuilder.build();
+    } else {
+      if (shouldUseTermsQuery) {
+        log.trace("Using TermInSetQuery (request params: {})", req.getParamString());
+
+        final List<BytesRef> terms = new ArrayList<>(queryTerms.size());
+        for (Pair<BytesRef, Float> pair : queryTerms) {
+          terms.add(pair.first());
+        }
+        termsQuery = new TermInSetQuery(fieldName, terms);
+      } else {
+        log.trace("Using boolean query with Terms clauses (request params: {})", req.getParamString());
+
+        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+        for (Pair<BytesRef, Float> pair : queryTerms) {
+          addTermToQuery(booleanQueryBuilder, fieldName, pair.first(), pair.second());
+        }
+        termsQuery = booleanQueryBuilder.build();
+      }
     }
 
     log.debug("Prepared a query for field {} with {} boolean clauses. (request params: {}}", fieldName,
@@ -253,4 +276,27 @@ final class RedisQParser extends QParser {
 
     queryBuilder.add(termQuery, this.operator);
   }
+
+  /**
+   * Adds numeric clause to query.
+   *
+   * @param queryBuilder Boolean query builder object which should take new clauses.
+   * @param fieldName Field name used in added clause.
+   * @param term Term
+   * @param score Optional score
+   * @param ft field type for the field we're using
+   */
+  private void addNumericTermToQuery(final BooleanQuery.Builder queryBuilder, final String fieldName,
+      final BytesRef term, final Float score, final FieldType ft) {
+
+    final String value = term.utf8ToString();
+    Query clause = ft.getFieldQuery(this, req.getSchema().getField(fieldName), value);
+
+    if (!score.isNaN() && (score > 0)) {
+      clause = new BoostQuery(clause, score);
+    }
+
+    queryBuilder.add(clause, this.operator);
+  }
 }
+

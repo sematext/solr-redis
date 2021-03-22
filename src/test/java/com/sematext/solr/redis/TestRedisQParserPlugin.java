@@ -6,31 +6,44 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.search.QParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Protocol;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.verify;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.*;
 
 public class TestRedisQParserPlugin {
+  
+  private AutoCloseable mocks;
+  
+  @Before
+  public void setUp() {
+    mocks = MockitoAnnotations.openMocks(this);
+  }
+  
+  @After
+  public void tearDown() {
+    try {
+      mocks.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
   @Spy
   private final RedisQParserPlugin parserPlugin = new RedisQParserPlugin();
   private final ArgumentCaptor<GenericObjectPoolConfig> poolConfigArgument = ArgumentCaptor.forClass(GenericObjectPoolConfig.class);
   private final ArgumentCaptor<String> passwordArgument = ArgumentCaptor.forClass(String.class);
   private final ArgumentCaptor<JedisPool> poolArgument = ArgumentCaptor.forClass(JedisPool.class);
-
-  @Before
-  public void setUp() {
-    initMocks(this);
-  }
-
+  
   @Test
   public void shouldReturnInstanceOfQParserPlugin() {
     final ModifiableSolrParams localParams = new ModifiableSolrParams();

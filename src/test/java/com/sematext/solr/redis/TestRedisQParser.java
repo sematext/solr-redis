@@ -8,10 +8,13 @@ import org.apache.lucene.search.QueryVisitor;
 import org.apache.lucene.search.TermInSetQuery;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.schema.FieldType;
 import org.apache.solr.schema.IndexSchema;
+import org.apache.solr.schema.SchemaField;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.QueryParsing;
 import org.apache.solr.search.SyntaxError;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,13 +31,16 @@ import java.io.IOException;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
 import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.ConstantScoreQuery;
+import org.apache.lucene.search.IndexOrDocValuesQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.mockito.MockitoAnnotations;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 public class TestRedisQParser {
 
@@ -51,6 +57,15 @@ public class TestRedisQParser {
 
   @Mock
   private IndexSchema schema;
+  
+  @Mock
+  private SchemaField fieldMock;
+  
+  @Mock
+  private FieldType fieldTypeMock;
+  
+  @Mock
+  private IndexOrDocValuesQuery indexOrDocValuesQuery;
 
   @Mock
   private JedisPool jedisPoolMock;
@@ -63,11 +78,22 @@ public class TestRedisQParser {
 
   private CommandHandler commandHandler;
 
+  private AutoCloseable mocks;
+
   @Before
   public void setUp() {
-    initMocks(this);
+    mocks = MockitoAnnotations.openMocks(this);
     when(jedisPoolMock.getResource()).thenReturn(jedisMock);
     commandHandler = new RetryingCommandHandler(jedisPoolMock, 1);
+  }
+  
+  @After
+  public void tearDown() {
+    try {
+      mocks.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -1237,6 +1263,7 @@ public class TestRedisQParser {
     Assert.assertEquals(2, terms.size());
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void shouldAddTermsFromRedisOnEval() throws SyntaxError, IOException {
     when(localParamsMock.get("command")).thenReturn("eval");
@@ -1249,7 +1276,7 @@ public class TestRedisQParser {
             Arrays.asList("command", "script", "key", "arg").iterator());
 
     when(localParamsMock.get(QueryParsing.V)).thenReturn("string_field");
-    when(jedisMock.eval(anyString(), anyInt(), (String) anyVararg())).thenReturn(1);
+    when(jedisMock.eval(anyString(), anyInt(), (String) any())).thenReturn(1);
 
     when(requestMock.getSchema()).thenReturn(schema);
     when(schema.getQueryAnalyzer()).thenReturn(new StandardAnalyzer());
@@ -1330,6 +1357,28 @@ public class TestRedisQParser {
     IndexSearcher searcher = new IndexSearcher(new MultiReader());
     Query rewrittenQuery = searcher.rewrite(query);
     assertTrue(rewrittenQuery instanceof TermInSetQuery);
+  }
+  
+  @Test
+  public void shouldUseNumericQuery() throws SyntaxError, IOException {
+    when(localParamsMock.get("command")).thenReturn("smembers");
+    when(localParamsMock.get("key")).thenReturn("simpleKey");
+    when(localParamsMock.get("useAnalyzer")).thenReturn("false");
+    when(localParamsMock.get(QueryParsing.V)).thenReturn("int_field");
+    when(requestMock.getSchema()).thenReturn(schema);
+    when(schema.getField(any())).thenReturn(fieldMock);
+    when(schema.getFieldTypeNoEx(any())).thenReturn(fieldTypeMock);
+    when(fieldTypeMock.isPointField()).thenReturn(true);
+    when(fieldTypeMock.getFieldQuery(any(), any(), any())).thenReturn(indexOrDocValuesQuery);
+    when(jedisMock.smembers(anyString())).thenReturn(new HashSet<>(Arrays.asList("337", "338")));
+    redisQParser = new RedisQParser("int_field", localParamsMock, paramsMock, requestMock, commandHandler);
+    
+    //it should be a bool query, otherwise it will fail
+    BooleanQuery query = (BooleanQuery) redisQParser.parse();
+    
+    BooleanClause subClause = query.clauses().get(0);
+    
+    assertTrue(subClause.getQuery() instanceof IndexOrDocValuesQuery);
   }
 
 
