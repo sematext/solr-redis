@@ -91,7 +91,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <solr.version>8.6.1</solr.version>
+        <solr.version>8.8.2</solr.version>
         <junit.version>4.13.1</junit.version>
         <gson.version>2.5</gson.version>
         <mockito.version>3.7.7</mockito.version>
